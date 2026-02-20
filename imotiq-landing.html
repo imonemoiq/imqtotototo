@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ImotIQ — Интелигентни Имоти</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --dark: #0A0A0F;
+    --dark-2: #111118;
+    --dark-3: #1A1A24;
+    --cream: #F5F0E8;
+    --cream-dim: #D4CCB8;
+    --accent: #4C7AC9;
+    --green: #2ECC8A;
+    --red: #E84C4C;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.08s ease;
+    opacity: 0.5;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    padding: 24px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to bottom, rgba(10,10,15,0.95), transparent);
+    backdrop-filter: blur(8px);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--gold); }
+  nav ul { list-style: none; display: flex; gap: 40px; }
+  nav a {
+    color: var(--cream-dim);
+    text-decoration: none;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--gold); }
+  .nav-cta {
+    background: var(--gold);
+    color: var(--dark) !important;
+    padding: 10px 24px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .nav-cta:hover { background: var(--gold-light); color: var(--dark) !important; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 120px 60px 80px;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 50% at 70% 50%, rgba(201,168,76,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 20% 80%, rgba(76,122,201,0.06) 0%, transparent 60%);
+  }
+
+  .grid-overlay {
+    position: absolute; inset: 0;
+    background-image: 
+      linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  }
+
+  .hero-content { position: relative; z-index: 2; max-width: 700px; }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--gold);
+    position: relative;
+  }
+  h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 4px; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--cream-dim);
+    line-height: 1.7;
+    max-width: 500px;
+    margin-bottom: 48px;
+    font-weight: 300;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex; gap: 16px; align-items: center;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--dark);
+    padding: 16px 36px;
+    border: none;
+    border-radius: 2px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    cursor: none;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(201,168,76,0.3);
+  }
+  .btn-ghost {
+    color: var(--cream-dim);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: flex; align-items: center; gap: 8px;
+    transition: color 0.2s;
+  }
+  .btn-ghost:hover { color: var(--cream); }
+  .btn-ghost svg { transition: transform 0.2s; }
+  .btn-ghost:hover svg { transform: translateX(4px); }
+
+  /* FLOATING CARD */
+  .hero-visual {
+    position: absolute;
+    right: 60px; top: 50%;
+    transform: translateY(-50%);
+    width: 380px;
+    animation: fadeLeft 1s 0.4s ease both;
+  }
+
+  .analysis-card {
+    background: var(--dark-3);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 12px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .analysis-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--cream-dim);
+  }
+  .card-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.7rem;
+    color: var(--green);
+  }
+
+  .property-info {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .property-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+  .property-meta {
+    font-size: 0.8rem;
+    color: var(--cream-dim);
+  }
+
+  .score-section {
+    display: flex; gap: 12px; margin-bottom: 20px;
+  }
+  .score-box {
+    flex: 1;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+  .score-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+  .score-value.red { color: var(--red); }
+  .score-value.green { color: var(--green); }
+  .score-label { font-size: 0.65rem; color: var(--cream-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .insights { display: flex; flex-direction: column; gap: 10px; }
+  .insight {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.8rem;
+    color: var(--cream-dim);
+    line-height: 1.4;
+  }
+  .insight-icon {
+    width: 20px; height: 20px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .insight-icon.warn { background: rgba(232,76,76,0.15); color: var(--red); }
+  .insight-icon.ok { background: rgba(46,204,138,0.15); color: var(--green); }
+  .insight-icon.info { background: rgba(76,122,201,0.15); color: var(--accent); }
+
+  .floating-tag {
+    position: absolute;
+    background: var(--dark-3);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .floating-tag.tl { top: -20px; left: -40px; animation: float1 4s ease-in-out infinite; }
+  .floating-tag.br { bottom: -16px; right: -30px; animation: float2 4s 1s ease-in-out infinite; }
+  .tag-val { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--gold); }
+
+  /* STATS BAR */
+  .stats-bar {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 32px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--dark-2);
+  }
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--gold);
+    display: block;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--cream-dim); }
+  .stat-div { width: 1px; height: 40px; background: rgba(255,255,255,0.08); }
+
+  /* FEATURES */
+  .features {
+    padding: 120px 60px;
+    background: var(--dark);
+  }
+  .section-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 60px;
+    max-width: 500px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: rgba(255,255,255,0.04);
+  }
+  .feature {
+    background: var(--dark);
+    padding: 40px 36px;
+    transition: background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 0;
+    background: linear-gradient(to bottom, rgba(201,168,76,0.08), transparent);
+    transition: height 0.4s ease;
+  }
+  .feature:hover::before { height: 100%; }
+  .feature:hover { background: var(--dark-3); }
+
+  .feature-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    color: rgba(201,168,76,0.4);
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+  .feature-icon {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .feature h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .feature p { font-size: 0.88rem; color: var(--cream-dim); line-height: 1.7; font-weight: 300; }
+
+  /* PRICING */
+  .pricing {
+    padding: 120px 60px;
+    background: var(--dark-2);
+  }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    background: rgba(255,255,255,0.04);
+    margin-top: 60px;
+  }
+  .plan {
+    background: var(--dark-2);
+    padding: 40px 28px;
+    position: relative;
+    transition: transform 0.3s, background 0.3s;
+  }
+  .plan:hover { background: var(--dark-3); transform: translateY(-4px); }
+  .plan.featured {
+    background: var(--dark-3);
+    border: 1px solid rgba(201,168,76,0.3);
+    transform: translateY(-8px);
+  }
+  .plan-badge {
+    position: absolute; top: -12px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--dark);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 100px;
+  }
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--cream-dim);
+    margin-bottom: 16px;
+  }
+  .plan-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .plan-price span { font-size: 1rem; color: var(--cream-dim); font-weight: 400; }
+  .plan-desc { font-size: 0.8rem; color: var(--cream-dim); margin-bottom: 28px; font-weight: 300; }
+  .plan-features { list-style: none; margin-bottom: 32px; }
+  .plan-features li {
+    font-size: 0.82rem;
+    color: var(--cream-dim);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .plan-features li::before {
+    content: '—';
+    color: var(--gold);
+    font-size: 0.7rem;
+  }
+  .plan-cta {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 2px;
+    color: var(--gold);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+  .plan-cta:hover, .plan.featured .plan-cta {
+    background: var(--gold);
+    color: var(--dark);
+    border-color: var(--gold);
+  }
+  .plan.featured .plan-cta:hover { background: var(--gold-light); }
+
+  /* EMAIL CAPTURE */
+  .email-section {
+    padding: 100px 60px;
+    background: var(--dark);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .email-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.06), transparent);
+  }
+  .email-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .email-section p {
+    color: var(--cream-dim);
+    font-size: 1rem;
+    margin-bottom: 40px;
+    font-weight: 300;
+    position: relative;
+  }
+  .email-form {
+    display: flex; gap: 0; max-width: 440px; margin: 0 auto;
+    position: relative;
+  }
+  .email-form input {
+    flex: 1;
+    background: var(--dark-3);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-right: none;
+    padding: 16px 20px;
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    border-radius: 2px 0 0 2px;
+    transition: border-color 0.2s;
+  }
+  .email-form input:focus { border-color: rgba(201,168,76,0.5); }
+  .email-form input::placeholder { color: rgba(212,204,184,0.4); }
+  .email-form button {
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    padding: 16px 28px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: none;
+    border-radius: 0 2px 2px 0;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .email-form button:hover { background: var(--gold-light); }
+
+  /* FOOTER */
+  footer {
+    padding: 40px 60px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--dark-2);
+  }
+  footer p { font-size: 0.8rem; color: rgba(212,204,184,0.4); }
+  .footer-links { display: flex; gap: 28px; }
+  .footer-links a { font-size: 0.8rem; color: rgba(212,204,184,0.4); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--gold); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeLeft {
+    from { opacity: 0; transform: translate(40px, -50%); }
+    to { opacity: 1; transform: translate(0, -50%); }
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* TICKER */
+  .ticker-wrap {
+    background: var(--gold);
+    overflow: hidden;
+    padding: 10px 0;
+  }
+  .ticker {
+    display: flex;
+    animation: ticker 20s linear infinite;
+    width: max-content;
+  }
+  .ticker-item {
+    color: var(--dark);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0 40px;
+    white-space: nowrap;
+  }
+  .ticker-sep { color: rgba(10,10,15,0.3); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .hero-visual {
+      display: block;
+      position: relative;
+      right: auto; top: auto;
+      transform: none;
+      width: 100%;
+      max-width: 480px;
+      margin: 48px auto 0;
+      animation: fadeUp 1s 0.4s ease both;
+    }
+    .floating-tag.tl { top: -12px; left: 0; }
+    .floating-tag.br { bottom: -12px; right: 0; }
+    .hero { flex-direction: column; align-items: flex-start; padding-bottom: 120px; }
+    nav { padding: 20px 24px; }
+    nav ul { gap: 20px; }
+    .hero { padding: 120px 24px 120px; }
+    .stats-bar { padding: 32px 24px; flex-wrap: wrap; gap: 24px; }
+    .stat-div { display: none; }
+    .stat { flex: 1 1 40%; }
+    .features { padding: 80px 24px; }
+    .features-grid { grid-template-columns: 1fr 1fr; }
+    .pricing { padding: 80px 24px; }
+    .pricing-grid { grid-template-columns: 1fr 1fr; }
+    .plan.featured { transform: none; }
+    .email-section { padding: 80px 24px; }
+    footer { padding: 32px 24px; flex-direction: column; gap: 16px; text-align: center; }
+    .section-title { margin-bottom: 40px; }
+  }
+  @media (max-width: 640px) {
+    nav ul { display: none; }
+    h1 { font-size: 2.8rem; }
+    .features-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .stat { flex: 1 1 100%; }
+    .email-form { flex-direction: column; }
+    .email-form input { border-right: 1px solid rgba(201,168,76,0.2); border-bottom: none; border-radius: 2px 2px 0 0; }
+    .email-form button { border-radius: 0 0 2px 2px; }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Imot<span>IQ</span></div>
+  <ul>
+    <li><a href="#features">Функции</a></li>
+    <li><a href="#pricing">Цени</a></li>
+    <li><a href="#about">За нас</a></li>
+    <li><a href="#pricing" class="nav-cta">Започни</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Единственият AI анализатор на имоти в България
+    </div>
+    <h1>Купи умно.<br><em>Не на сляпо.</em></h1>
+    <p class="hero-sub">ImotIQ анализира всяка обява — цена, квартал, пазарен тренд, фалшиви сигнали — и ти казва истината преди да вземеш най-важното решение.</p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn-primary">Безплатна оценка →</a>
+      <a href="#features" class="btn-ghost">
+        Виж как работи
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="floating-tag tl">
+      <div class="tag-val">-18%</div>
+      <div style="font-size:0.65rem;color:var(--cream-dim)">Надценена</div>
+    </div>
+    <div class="analysis-card">
+      <div class="card-header">
+        <span class="card-title">AI Анализ</span>
+        <span class="card-status">
+          <span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span>
+          Завършен
+        </span>
+      </div>
+      <div class="property-info">
+        <div class="property-name">Лозенец, 3-стаен</div>
+        <div class="property-meta">95 м² · Обявена цена: 285,000 лв</div>
+      </div>
+      <div class="score-section">
+        <div class="score-box">
+          <div class="score-value red">4.2</div>
+          <div class="score-label">Оценка /10</div>
+        </div>
+        <div class="score-box">
+          <div class="score-value green">238K</div>
+          <div class="score-label">Справедлива цена</div>
+        </div>
+      </div>
+      <div class="insights">
+        <div class="insight">
+          <div class="insight-icon warn">!</div>
+          <span>Надценена с 19% спрямо средното за квартала</span>
+        </div>
+        <div class="insight">
+          <div class="insight-icon warn">!</div>
+          <span>Активна 6 месеца — продавачът е мотивиран</span>
+        </div>
+        <div class="insight">
+          <div class="insight-icon ok">✓</div>
+          <span>Снимките са оригинални, без индикатори за измама</span>
+        </div>
+        <div class="insight">
+          <div class="insight-icon info">↗</div>
+          <span>Кварталът расте с 4.2% на тримесечие</span>
+        </div>
+      </div>
+    </div>
+    <div class="floating-tag br">
+      <div style="font-size:0.65rem;color:var(--cream-dim)">Квартален тренд</div>
+      <div class="tag-val">+4.2% / тримесечие</div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span class="ticker-item">AI Оценка на обяви <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Фалшива обява детектор <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Цени по квартали <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Наем vs Купуване <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Месечни репорти <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Alerts с контекст <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">AI Оценка на обяви <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Фалшива обява детектор <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Цени по квартали <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Наем vs Купуване <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Месечни репорти <span class="ticker-sep">✦</span></span>
+    <span class="ticker-item">Alerts с контекст <span class="ticker-sep">✦</span></span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar reveal">
+  <div class="stat">
+    <span class="stat-num">12,400+</span>
+    <span class="stat-label">Анализирани обяви</span>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat">
+    <span class="stat-num">94%</span>
+    <span class="stat-label">Точност на оценката</span>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat">
+    <span class="stat-num">23K лв</span>
+    <span class="stat-label">Средно спестени при покупка</span>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat">
+    <span class="stat-num">38</span>
+    <span class="stat-label">Квартала покрити</span>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-label">Какво правим</div>
+  <div class="section-title reveal">Всичко което <em style="color:var(--gold)">Imot.bg не ти казва</em></div>
+
+  <div class="features-grid">
+    <div class="feature reveal">
+      <div class="feature-num">01</div>
+      <span class="feature-icon">🧠</span>
+      <h3>AI Оценка на Обява</h3>
+      <p>Пускаш линк, получаваш пълен анализ. Надценена ли е? Колко е справедливата цена? Какво крие описанието?</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-num">02</div>
+      <span class="feature-icon">🔍</span>
+      <h3>Фалшива Обява Детектор</h3>
+      <p>Засичаме копирани снимки, подозрителни телефони и обяви под пазарна цена използвани за измама.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-num">03</div>
+      <span class="feature-icon">📊</span>
+      <h3>Квартален Здравен Доклад</h3>
+      <p>Всеки квартал в София получава месечна оценка — тренд, инфраструктура, нови строежи, перспектива.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-num">04</div>
+      <span class="feature-icon">⚖️</span>
+      <h3>Наем vs Купуване</h3>
+      <p>За конкретен имот изчисляваме кое е по-изгодно за твоя бюджет и хоризонт. Математически, не емоционално.</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-num">05</div>
+      <span class="feature-icon">🔔</span>
+      <h3>Alerts с Контекст</h3>
+      <p>Не просто "нова обява" — а "12% под средното за квартала, активна от вчера, заслужава внимание."</p>
+    </div>
+    <div class="feature reveal">
+      <div class="feature-num">06</div>
+      <span class="feature-icon">📈</span>
+      <h3>Времева Машина на Цените</h3>
+      <p>История на цените по квартали за 5 години назад и AI прогноза за следващите 12 месеца.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="section-label">Планове</div>
+  <div class="section-title reveal">Прозрачни цени.<br>Без изненади.</div>
+
+  <div class="pricing-grid">
+    <div class="plan reveal">
+      <div class="plan-name">Безплатен</div>
+      <div class="plan-price">0 <span>лв/мес</span></div>
+      <div class="plan-desc">За да усетиш разликата</div>
+      <ul class="plan-features">
+        <li>1 AI оценка на месец</li>
+        <li>Базов price tracker</li>
+        <li>Публични квартални данни</li>
+      </ul>
+      <a href="#" class="plan-cta">Започни безплатно</a>
+    </div>
+    <div class="plan featured reveal">
+      <div class="plan-badge">Популярен</div>
+      <div class="plan-name">Стандарт</div>
+      <div class="plan-price">15 <span>лв/мес</span></div>
+      <div class="plan-desc">За сериозни купувачи и наематели</div>
+      <ul class="plan-features">
+        <li>Неограничени AI оценки</li>
+        <li>Фалшива обява детектор</li>
+        <li>Персонализирани alerts</li>
+        <li>Наем vs Купуване калкулатор</li>
+      </ul>
+      <a href="#" class="plan-cta">Избери план</a>
+    </div>
+    <div class="plan reveal">
+      <div class="plan-name">Про</div>
+      <div class="plan-price">39 <span>лв/мес</span></div>
+      <div class="plan-desc">За инвеститори и активни купувачи</div>
+      <ul class="plan-features">
+        <li>Всичко от Стандарт</li>
+        <li>Месечни PDF репорти</li>
+        <li>Квартален здравен доклад</li>
+        <li>Приоритетни alerts</li>
+        <li>Продавач инструмент</li>
+      </ul>
+      <a href="#" class="plan-cta">Избери план</a>
+    </div>
+    <div class="plan reveal">
+      <div class="plan-name">Брокер</div>
+      <div class="plan-price">99 <span>лв/мес</span></div>
+      <div class="plan-desc">За агенции и брокери</div>
+      <ul class="plan-features">
+        <li>Всичко от Про</li>
+        <li>Bulk анализ на обяви</li>
+        <li>API достъп</li>
+        <li>Приоритетна поддръжка</li>
+        <li>Брандирани репорти</li>
+      </ul>
+      <a href="#" class="plan-cta">Свържи се</a>
+    </div>
+  </div>
+</section>
+
+<!-- EMAIL CAPTURE -->
+<section class="email-section">
+  <h2 class="reveal">Бъди първи.<br>Early access → безплатно.</h2>
+  <p class="reveal">Регистрирай имейл и получи 3 безплатни оценки при launch.</p>
+  <div class="email-form reveal">
+    <input type="email" placeholder="твоят@имейл.bg">
+    <button type="submit">Запази място</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo" style="font-family:'Syne',sans-serif;font-weight:800">Imot<span style="color:var(--gold)">IQ</span></div>
+  <p>© 2025 ImotIQ. Всички права запазени.</p>
+  <div class="footer-links">
+    <a href="#">Поверителност</a>
+    <a href="#">Условия</a>
+    <a href="#">Контакт</a>
+  </div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div id="authModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(10,10,15,0.88);backdrop-filter:blur(14px);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--dark-3);border:1px solid rgba(201,168,76,0.2);border-radius:16px;padding:48px 40px;width:100%;max-width:420px;position:relative;animation:fadeUp 0.4s ease both;">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);border-radius:16px 16px 0 0;"></div>
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:20px;background:none;border:none;color:var(--cream-dim);font-size:1.3rem;cursor:pointer;opacity:0.5;transition:opacity 0.2s;line-height:1;">✕</button>
+
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;">Imot<span style="color:var(--gold)">IQ</span></div>
+      <div style="font-size:0.8rem;color:var(--cream-dim);margin-top:6px;">Интелигентни имоти за умни хора</div>
+    </div>
+
+    <div style="display:flex;background:rgba(255,255,255,0.04);border-radius:6px;padding:4px;margin-bottom:28px;">
+      <button id="tabLogin" onclick="switchTab('login')" style="flex:1;padding:10px;border:none;border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;font-size:0.85rem;background:var(--gold);color:var(--dark);cursor:pointer;transition:all 0.2s;">Вход</button>
+      <button id="tabRegister" onclick="switchTab('register')" style="flex:1;padding:10px;border:none;border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;font-size:0.85rem;background:transparent;color:var(--cream-dim);cursor:pointer;transition:all 0.2s;">Регистрация</button>
+    </div>
+
+    <button onclick="handleGoogle()" style="width:100%;padding:14px;background:white;color:#1a1a1a;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;transition:all 0.2s;">
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Продължи с Google
+    </button>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.07);"></div>
+      <span style="font-size:0.72rem;color:rgba(212,204,184,0.35);">или с имейл</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.07);"></div>
+    </div>
+
+    <div id="loginForm">
+      <input type="email" placeholder="имейл" style="width:100%;padding:14px 16px;margin-bottom:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:6px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;display:block;">
+      <input type="password" placeholder="парола" style="width:100%;padding:14px 16px;margin-bottom:20px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:6px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;display:block;">
+      <button onclick="window.location.href='imotiq-dashboard.html'" style="width:100%;padding:14px;background:var(--gold);color:var(--dark);border:none;border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;">Влез в профила →</button>
+    </div>
+
+    <div id="registerForm" style="display:none;">
+      <input type="text" placeholder="име и фамилия" style="width:100%;padding:14px 16px;margin-bottom:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:6px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;display:block;">
+      <input type="email" placeholder="имейл" style="width:100%;padding:14px 16px;margin-bottom:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:6px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;display:block;">
+      <input type="password" placeholder="парола" style="width:100%;padding:14px 16px;margin-bottom:20px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:6px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;display:block;">
+      <button onclick="window.location.href='imotiq-dashboard.html'" style="width:100%;padding:14px;background:var(--gold);color:var(--dark);border:none;border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;">Създай профил →</button>
+    </div>
+
+    <p style="text-align:center;font-size:0.7rem;color:rgba(212,204,184,0.3);margin-top:20px;line-height:1.7;">
+      Безплатният план включва 1 AI оценка/месец.<br>Без кредитна карта. Без задължения.
+    </p>
+  </div>
+</div>
+
+<script>
+  function openModal() {
+    document.getElementById('authModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('authModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.getElementById('authModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function switchTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
+    document.getElementById('tabLogin').style.background = isLogin ? 'var(--gold)' : 'transparent';
+    document.getElementById('tabLogin').style.color = isLogin ? 'var(--dark)' : 'var(--cream-dim)';
+    document.getElementById('tabRegister').style.background = isLogin ? 'transparent' : 'var(--gold)';
+    document.getElementById('tabRegister').style.color = isLogin ? 'var(--cream-dim)' : 'var(--dark)';
+  }
+
+  function handleGoogle() {
+    // Simulate login → redirect to dashboard
+    const btn = event.currentTarget;
+    btn.innerHTML = '<span style="display:flex;align-items:center;gap:8px;justify-content:center">⏳ Влизане...</span>';
+    btn.disabled = true;
+    setTimeout(() => { window.location.href = 'imotiq-dashboard.html'; }, 1200);
+  }
+
+  document.querySelectorAll('.nav-cta, .btn-primary, .plan-cta').forEach(btn => {
+    btn.addEventListener('click', e => { e.preventDefault(); openModal(); });
+  });
+  document.querySelector('.email-form button').addEventListener('click', e => {
+    e.preventDefault(); openModal();
+  });
+
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursor.style.left = mouseX - 6 + 'px';
+    cursor.style.top = mouseY - 6 + 'px';
+  });
+
+  function animateRing() {
+    ringX += (mouseX - ringX - 18) * 0.12;
+    ringY += (mouseY - ringY - 18) * 0.12;
+    ring.style.left = ringX + 'px';
+    ring.style.top = ringY + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button, input').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.style.transform = 'scale(2.5)');
+    el.addEventListener('mouseleave', () => cursor.style.transform = 'scale(1)');
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

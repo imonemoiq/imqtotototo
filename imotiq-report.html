@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ImotIQ — Квартален Доклад</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --gold:#C9A84C; --gold-light:#E8C97A; --gold-dim:rgba(201,168,76,0.12);
+    --dark:#0A0A0F; --dark-2:#111118; --dark-3:#1A1A24;
+    --cream:#F5F0E8; --cream-dim:#D4CCB8;
+    --green:#2ECC8A; --green-dim:rgba(46,204,138,0.12);
+    --red:#E84C4C; --red-dim:rgba(232,76,76,0.12);
+    --orange:#F39C12; --orange-dim:rgba(243,156,18,0.12);
+    --blue:#4C7AC9; --blue-dim:rgba(76,122,201,0.12);
+    --purple:#9B59B6; --purple-dim:rgba(155,89,182,0.12);
+    --sidebar:260px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--dark);color:var(--cream);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;cursor:none;}
+  .cursor{width:10px;height:10px;background:var(--gold);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform 0.15s;mix-blend-mode:difference;}
+  .cursor-ring{width:32px;height:32px;border:1px solid rgba(201,168,76,0.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:all 0.08s;}
+
+  /* SIDEBAR */
+  .sidebar{width:var(--sidebar);min-height:100vh;background:var(--dark-2);border-right:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+  .sidebar-logo{padding:28px 24px 24px;border-bottom:1px solid rgba(255,255,255,0.05);font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;}
+  .sidebar-logo span{color:var(--gold);}
+  .sidebar-section{padding:20px 16px 8px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(212,204,184,0.3);}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:2px 8px;border-radius:8px;cursor:none;transition:all 0.2s;color:var(--cream-dim);font-size:0.88rem;text-decoration:none;position:relative;}
+  .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--cream);}
+  .nav-item.active{background:var(--gold-dim);color:var(--gold);}
+  .nav-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--gold);border-radius:0 3px 3px 0;}
+  .nav-icon{width:18px;font-size:1rem;text-align:center;}
+  .nav-badge{margin-left:auto;background:var(--gold);color:var(--dark);font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:100px;font-family:'Syne',sans-serif;}
+  .sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,0.05);}
+  .plan-widget{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px;margin-bottom:12px;}
+  .plan-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;color:var(--gold);margin-bottom:4px;}
+  .plan-usage{font-size:0.72rem;color:var(--cream-dim);margin-bottom:8px;}
+  .usage-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+  .usage-fill{height:100%;background:var(--gold);border-radius:3px;}
+  .upgrade-btn{display:block;text-align:center;padding:8px;background:var(--gold);color:var(--dark);border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;text-decoration:none;margin-top:10px;cursor:none;transition:background 0.2s;}
+  .upgrade-btn:hover{background:var(--gold-light);}
+  .user-row{display:flex;align-items:center;gap:10px;}
+  .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),#8B6A1F);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--dark);flex-shrink:0;}
+  .user-name{font-size:0.82rem;font-weight:500;}
+  .user-plan{font-size:0.7rem;color:var(--cream-dim);}
+  .logout-btn{margin-left:auto;background:none;border:none;color:rgba(212,204,184,0.3);cursor:none;font-size:0.8rem;transition:color 0.2s;}
+  .logout-btn:hover{color:var(--red);}
+
+  /* MAIN */
+  .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+  .topbar{padding:20px 36px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;background:var(--dark);position:sticky;top:0;z-index:40;}
+  .page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;}
+  .notif-btn{width:36px;height:36px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;position:relative;}
+  .notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--gold);border-radius:50%;border:1.5px solid var(--dark);}
+  .content{padding:32px 36px;flex:1;}
+
+  /* DISTRICT SELECTOR */
+  .district-selector{
+    background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);
+    border-radius:16px;padding:28px;margin-bottom:24px;
+    display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+    position:relative;overflow:hidden;
+  }
+  .district-selector::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
+  .selector-left{}
+  .selector-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--gold);margin-bottom:8px;}
+  .district-name{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;margin-bottom:4px;}
+  .district-meta{font-size:0.84rem;color:var(--cream-dim);}
+  .selector-right{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+  .district-select{background:var(--dark-2);border:1px solid rgba(201,168,76,0.2);color:var(--cream);padding:10px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;cursor:none;min-width:200px;}
+  .report-date{font-size:0.72rem;color:var(--cream-dim);}
+  .download-btn{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:10px 20px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;cursor:none;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+  .download-btn:hover{background:var(--gold);color:var(--dark);}
+
+  /* SCORE OVERVIEW */
+  .score-overview{display:grid;grid-template-columns:auto 1fr;gap:24px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;margin-bottom:20px;}
+  .score-main{background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));padding:36px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,0.05);min-width:200px;}
+  .score-big{font-family:'Syne',sans-serif;font-weight:800;font-size:5rem;line-height:1;color:var(--gold);}
+  .score-max{font-size:1rem;color:rgba(212,204,184,0.4);font-family:'Syne',sans-serif;}
+  .score-label-main{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--cream-dim);margin-top:8px;}
+  .score-grade{display:inline-block;padding:4px 14px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:100px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--gold);margin-top:10px;}
+
+  .score-categories{padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;}
+  .cat-item{display:flex;flex-direction:column;gap:6px;}
+  .cat-header{display:flex;justify-content:space-between;align-items:center;}
+  .cat-name{font-size:0.8rem;color:var(--cream-dim);}
+  .cat-score{font-family:'Syne',sans-serif;font-weight:700;font-size:0.88rem;}
+  .cat-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;}
+  .cat-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+
+  /* MAIN GRID */
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+
+  /* PANEL */
+  .panel{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;}
+  .panel-head{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;}
+  .panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;}
+  .panel-badge{font-size:0.65rem;padding:3px 8px;border-radius:100px;font-family:'Syne',sans-serif;font-weight:700;}
+  .badge-up{background:var(--green-dim);color:var(--green);}
+  .badge-down{background:var(--red-dim);color:var(--red);}
+  .badge-neutral{background:rgba(255,255,255,0.06);color:var(--cream-dim);}
+
+  /* STAT ROWS */
+  .stat-row{display:flex;justify-content:space-between;align-items:center;padding:12px 24px;border-bottom:1px solid rgba(255,255,255,0.03);}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row:hover{background:rgba(255,255,255,0.02);}
+  .stat-key{font-size:0.8rem;color:var(--cream-dim);}
+  .stat-val{font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:500;}
+  .stat-val.green{color:var(--green);}
+  .stat-val.red{color:var(--red);}
+  .stat-val.gold{color:var(--gold);}
+
+  /* INFRASTRUCTURE */
+  .infra-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,0.04);margin-bottom:20px;}
+  .infra-item{background:var(--dark-3);padding:20px;text-align:center;transition:background 0.2s;}
+  .infra-item:hover{background:var(--dark-2);}
+  .infra-icon{font-size:1.6rem;margin-bottom:8px;}
+  .infra-name{font-size:0.72rem;color:var(--cream-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;}
+  .infra-score{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;}
+  .infra-dots{display:flex;gap:3px;justify-content:center;margin-top:6px;}
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .dot.filled{background:var(--gold);}
+  .dot.empty{background:rgba(255,255,255,0.08);}
+
+  /* FULL WIDTH PANEL */
+  .full-panel{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;margin-bottom:20px;}
+
+  /* NEWS */
+  .news-item{display:flex;gap:14px;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.2s;}
+  .news-item:last-child{border-bottom:none;}
+  .news-item:hover{background:rgba(255,255,255,0.02);}
+  .news-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+  .news-content{}
+  .news-title{font-size:0.86rem;font-weight:500;margin-bottom:4px;line-height:1.4;}
+  .news-meta{display:flex;gap:12px;}
+  .news-date{font-size:0.72rem;color:rgba(212,204,184,0.35);}
+  .news-tag{font-size:0.65rem;padding:2px 7px;border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;}
+
+  /* AI FORECAST */
+  .forecast-card{background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.2);border-radius:16px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden;}
+  .forecast-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
+  .forecast-bg{position:absolute;top:-20px;right:-20px;font-size:6rem;opacity:0.04;}
+  .forecast-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--gold);margin-bottom:8px;}
+  .forecast-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:16px;}
+  .forecast-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .forecast-item{background:rgba(255,255,255,0.03);border-radius:8px;padding:14px;text-align:center;}
+  .forecast-period{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--cream-dim);margin-bottom:6px;}
+  .forecast-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;}
+  .forecast-val.up{color:var(--green);}
+  .forecast-val.down{color:var(--red);}
+  .forecast-conf{font-size:0.65rem;color:rgba(212,204,184,0.35);margin-top:4px;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .fade-in{animation:fadeUp 0.5s ease both;}
+  .fade-in:nth-child(2){animation-delay:0.06s;}
+  .fade-in:nth-child(3){animation-delay:0.12s;}
+  .fade-in:nth-child(4){animation-delay:0.18s;}
+
+  /* ── MOBILE RESPONSIVE ── */
+  .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:49;backdrop-filter:blur(4px);}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:none;padding:8px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;}
+  .burger span{display:block;width:20px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
+  .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .burger.open span:nth-child(2){opacity:0;}
+  .burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  @media(max-width:900px){
+    .sidebar{transform:translateX(-100%);transition:transform 0.3s ease;box-shadow:none;}
+    .sidebar.open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,0.5);}
+    .mobile-overlay.show{display:block;}
+    .main{margin-left:0 !important;}
+    .burger{display:flex;}
+    .content{padding:20px 16px !important;}
+    .topbar{padding:14px 16px !important;}
+    /* Stack grids on mobile */
+    .stats-grid,.summary-grid,.hero-stats{grid-template-columns:1fr 1fr !important;}
+    .bottom-grid,.main-grid,.comparison,.bottom-row{grid-template-columns:1fr !important;}
+    .calc-layout,.settings-layout{grid-template-columns:1fr !important;}
+    .district-grid{grid-template-columns:1fr 1fr !important;}
+    .forecast-grid{grid-template-columns:1fr 1fr !important;}
+    .alert-form{grid-template-columns:1fr 1fr !important;}
+    .alert-main{grid-template-columns:auto 1fr !important;}
+    .alert-stats,.alert-actions{display:none !important;}
+    .plans-grid{grid-template-columns:1fr !important;}
+    .chart-header{flex-direction:column !important;gap:12px !important;}
+    .url-row,.url-input-wrap{flex-wrap:wrap !important;}
+    .url-inp,.url-input{border-right:1px solid rgba(201,168,76,0.15) !important;border-radius:8px !important;margin-bottom:8px !important;width:100% !important;}
+    .scan-btn,.analyze-btn{border-radius:8px !important;width:100% !important;justify-content:center !important;}
+    .infra-grid{grid-template-columns:repeat(3,1fr) !important;}
+    .chips-wrap{padding-bottom:8px !important;}
+  }
+  @media(max-width:500px){
+    .stats-grid,.summary-grid,.hero-stats{grid-template-columns:1fr !important;}
+    .district-grid,.forecast-grid{grid-template-columns:1fr !important;}
+    .score-overview{grid-template-columns:1fr !important;}
+    .score-main{border-right:none !important;border-bottom:1px solid rgba(255,255,255,0.05) !important;}
+    .checks-grid{grid-template-columns:1fr !important;}
+  }
+
+  /* ── PAGE TRANSITIONS ── */
+  body{opacity:0;animation:pageIn 0.35s ease forwards;}
+  @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .page-exit{animation:pageOut 0.25s ease forwards !important;}
+  @keyframes pageOut{to{opacity:0;transform:translateY(-8px)}}
+</style>
+
+  <!-- ImotIQ Config -->
+  <script>
+    const IMOTIQ_CONFIG = {
+      BACKEND_URL: 'https://script.google.com/macros/s/AKfycbzYJCaEJto02kUpT4ZpdDTb_SX1CqhG8OeMxthn8zpic5OjXGjHmEwAEeaNXfdx4aiThA/exec',
+      VERSION: '1.0',
+    };
+
+    // ── API HELPER ──────────────────────────────────────────
+    async function apiCall(action, data = {}) {
+      try {
+        const res = await fetch(IMOTIQ_CONFIG.BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action, ...data }),
+        });
+        return await res.json();
+      } catch(e) {
+        console.error('API error:', e);
+        return { success: false, error: e.message };
+      }
+    }
+
+    // ── SESSION ─────────────────────────────────────────────
+    function getSession() { return localStorage.getItem('imotiq_session'); }
+    function getUser()    { return JSON.parse(localStorage.getItem('imotiq_user') || 'null'); }
+
+    function checkSession() {
+      if(!getSession() && !window.location.href.includes('landing')) {
+        window.location.href = 'imotiq-landing.html';
+      }
+    }
+
+    // ── LOGOUT ──────────────────────────────────────────────
+    async function logout() {
+      await apiCall('logout', { sessionId: getSession() });
+      localStorage.clear();
+      window.location.href = 'imotiq-landing.html';
+    }
+  </script>
+
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Imot<span>IQ</span></div>
+  <div style="padding:12px 8px 0;">
+    <div class="sidebar-section">Главно</div>
+    <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">🧠</span> AI Анализ</a>
+    <a class="nav-item" href="imotiq-alerts.html"><span class="nav-icon">🔔</span> Моите Alerts<span class="nav-badge">3</span></a>
+
+    <div class="sidebar-section">Пазар</div>
+    <a class="nav-item" href="imotiq-tracker.html"><span class="nav-icon">📊</span> Квартален Трекер</a>
+    <a class="nav-item" href="imotiq-trend.html"><span class="nav-icon">📈</span> Ценови Тренд</a>
+    <a class="nav-item active" href="imotiq-report.html"><span class="nav-icon">🏘️</span> Квартален Доклад</a>
+
+    <div class="sidebar-section">Инструменти</div>
+    <a class="nav-item" href="imotiq-calculator.html"><span class="nav-icon">⚖️</span> Наем vs Купуване</a>
+    <a class="nav-item" href="imotiq-detector.html"><span class="nav-icon">🔍</span> Фалшиви Обяви</a>
+    <a class="nav-item" href="imotiq-history.html"><span class="nav-icon">📋</span> История</a>
+
+    <div class="sidebar-section">Акаунт</div>
+    <a class="nav-item" href="imotiq-settings.html"><span class="nav-icon">⚙️</span> Настройки</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="plan-widget">
+      <div class="plan-name">⭐ Про план</div>
+      <div class="plan-usage">Неограничени доклади</div>
+      <div class="usage-bar"><div class="usage-fill" style="width:60%"></div></div>
+      <a href="#" class="upgrade-btn">Управлявай абонамент →</a>
+    </div>
+    <div class="user-row">
+      <div class="avatar">ИИ</div>
+      <div><div class="user-name">Иван Иванов</div><div class="user-plan">Про план</div></div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">🏘️ Квартален Доклад</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:0.78rem;color:var(--cream-dim)" id="currentDate"></div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DISTRICT SELECTOR -->
+    <div class="district-selector fade-in">
+      <div class="selector-left">
+        <div class="selector-label">📍 Текущ квартал</div>
+        <div class="district-name" id="districtName">🏙️ Лозенец</div>
+        <div class="district-meta">София · Южен централен район · Доклад за Февруари 2025</div>
+      </div>
+      <div class="selector-right">
+        <select class="district-select" onchange="changeDistrict(this.value)">
+          <option value="lozents">🏙️ Лозенец</option>
+          <option value="mladost">🏢 Младост</option>
+          <option value="vitosha">🌿 Витоша</option>
+          <option value="student">🎓 Студентски</option>
+          <option value="nadezhda">🏘️ Надежда</option>
+          <option value="lyulin">🏗️ Люлин</option>
+          <option value="boyana">🏡 Бояна</option>
+          <option value="simeonovo">🌲 Симеоново</option>
+        </select>
+        <div class="report-date">Обновен: 01.02.2025 · Следващ: 01.03.2025</div>
+        <button class="download-btn">📥 Свали PDF доклад</button>
+      </div>
+    </div>
+
+    <!-- SCORE OVERVIEW -->
+    <div class="score-overview fade-in">
+      <div class="score-main">
+        <div class="score-big" id="scoreBig">7.8</div>
+        <div style="display:flex;align-items:baseline;gap:2px;margin-top:4px;">
+          <div class="score-max">/ 10</div>
+        </div>
+        <div class="score-label-main">Общ скор</div>
+        <div class="score-grade" id="scoreGrade">⭐ Много добър</div>
+      </div>
+      <div class="score-categories">
+        <div class="cat-item">
+          <div class="cat-header">
+            <div class="cat-name">🏗️ Инфраструктура</div>
+            <div class="cat-score" style="color:var(--green)" id="catInfra">8.5</div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:85%;background:var(--green)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-header">
+            <div class="cat-name">📈 Ценови тренд</div>
+            <div class="cat-score" style="color:var(--green)" id="catPrice">8.0</div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:80%;background:var(--green)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-header">
+            <div class="cat-name">🚌 Транспорт</div>
+            <div class="cat-score" style="color:var(--gold)" id="catTransport">7.0</div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:70%;background:var(--gold)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-header">
+            <div class="cat-name">🌳 Зеленина</div>
+            <div class="cat-score" style="color:var(--green)" id="catGreen">8.2</div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:82%;background:var(--green)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-header">
+            <div class="cat-name">🏫 Услуги</div>
+            <div class="cat-score" style="color:var(--green)" id="catServices">9.0</div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:90%;background:var(--green)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-header">
+            <div class="cat-name">🔒 Сигурност</div>
+            <div class="cat-score" style="color:var(--gold)" id="catSafety">6.5</div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:65%;background:var(--gold)"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+
+      <!-- PRICE STATS -->
+      <div class="panel fade-in">
+        <div class="panel-head">
+          <div class="panel-title">💰 Ценова статистика</div>
+          <span class="panel-badge badge-up">↑ +4.2% MoM</span>
+        </div>
+        <div class="stat-row"><div class="stat-key">Средна цена</div><div class="stat-val gold">3,240 лв/м²</div></div>
+        <div class="stat-row"><div class="stat-key">Медианна цена</div><div class="stat-val">3,180 лв/м²</div></div>
+        <div class="stat-row"><div class="stat-key">Мин. цена</div><div class="stat-val green">2,400 лв/м²</div></div>
+        <div class="stat-row"><div class="stat-key">Макс. цена</div><div class="stat-val red">5,800 лв/м²</div></div>
+        <div class="stat-row"><div class="stat-key">Ръст (1 месец)</div><div class="stat-val green">+4.2%</div></div>
+        <div class="stat-row"><div class="stat-key">Ръст (1 година)</div><div class="stat-val green">+18.7%</div></div>
+        <div class="stat-row"><div class="stat-key">Прогноза (6 мес)</div><div class="stat-val green">+5–8%</div></div>
+      </div>
+
+      <!-- MARKET ACTIVITY -->
+      <div class="panel fade-in">
+        <div class="panel-head">
+          <div class="panel-title">📊 Пазарна активност</div>
+          <span class="panel-badge badge-up">Активен пазар</span>
+        </div>
+        <div class="stat-row"><div class="stat-key">Активни обяви</div><div class="stat-val">284</div></div>
+        <div class="stat-row"><div class="stat-key">Нови тази седмица</div><div class="stat-val green">+47</div></div>
+        <div class="stat-row"><div class="stat-key">Продадени (месец)</div><div class="stat-val">38</div></div>
+        <div class="stat-row"><div class="stat-key">Среден престой</div><div class="stat-val">42 дни</div></div>
+        <div class="stat-row"><div class="stat-key">Наем средно</div><div class="stat-val gold">14 лв/м²</div></div>
+        <div class="stat-row"><div class="stat-key">Наемна доходност</div><div class="stat-val green">5.2% год</div></div>
+        <div class="stat-row"><div class="stat-key">Търсене vs Предлагане</div><div class="stat-val red">Търсенето превишава</div></div>
+      </div>
+
+    </div>
+
+    <!-- INFRASTRUCTURE -->
+    <div class="full-panel fade-in" style="margin-bottom:20px;">
+      <div class="panel-head">
+        <div class="panel-title">🏗️ Инфраструктура и услуги</div>
+        <span class="panel-badge badge-up">8.5 / 10</span>
+      </div>
+      <div class="infra-grid">
+        <div class="infra-item">
+          <div class="infra-icon">🏥</div>
+          <div class="infra-name">Здравеопазване</div>
+          <div class="infra-score" style="color:var(--green)">9.2</div>
+          <div class="infra-dots">
+            <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-icon">🏫</div>
+          <div class="infra-name">Образование</div>
+          <div class="infra-score" style="color:var(--green)">8.8</div>
+          <div class="infra-dots">
+            <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-icon">🚌</div>
+          <div class="infra-name">Транспорт</div>
+          <div class="infra-score" style="color:var(--gold)">7.0</div>
+          <div class="infra-dots">
+            <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot empty"></div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-icon">🛒</div>
+          <div class="infra-name">Търговия</div>
+          <div class="infra-score" style="color:var(--green)">9.5</div>
+          <div class="infra-dots">
+            <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-icon">🌳</div>
+          <div class="infra-name">Зеленина</div>
+          <div class="infra-score" style="color:var(--green)">8.2</div>
+          <div class="infra-dots">
+            <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot empty"></div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-icon">🔒</div>
+          <div class="infra-name">Сигурност</div>
+          <div class="infra-score" style="color:var(--gold)">6.5</div>
+          <div class="infra-dots">
+            <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot empty"></div><div class="dot empty"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI FORECAST -->
+    <div class="forecast-card fade-in">
+      <div class="forecast-bg">🔮</div>
+      <div class="forecast-label">🤖 AI Прогноза</div>
+      <div class="forecast-title">Очаквано развитие на цените в Лозенец</div>
+      <div class="forecast-grid">
+        <div class="forecast-item">
+          <div class="forecast-period">1 месец</div>
+          <div class="forecast-val up">+1.2%</div>
+          <div class="forecast-conf">Увереност: 89%</div>
+        </div>
+        <div class="forecast-item">
+          <div class="forecast-period">3 месеца</div>
+          <div class="forecast-val up">+3.8%</div>
+          <div class="forecast-conf">Увереност: 76%</div>
+        </div>
+        <div class="forecast-item">
+          <div class="forecast-period">6 месеца</div>
+          <div class="forecast-val up">+6.5%</div>
+          <div class="forecast-conf">Увереност: 64%</div>
+        </div>
+        <div class="forecast-item">
+          <div class="forecast-period">12 месеца</div>
+          <div class="forecast-val up">+11.2%</div>
+          <div class="forecast-conf">Увереност: 51%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEWS -->
+    <div class="full-panel fade-in">
+      <div class="panel-head">
+        <div class="panel-title">📰 Новини и развитие в квартала</div>
+        <span style="font-size:0.72rem;color:var(--cream-dim)">Февруари 2025</span>
+      </div>
+      <div class="news-item">
+        <div class="news-dot" style="background:var(--green)"></div>
+        <div class="news-content">
+          <div class="news-title">Одобрено строителство на нова метро спирка в близост до квартала</div>
+          <div class="news-meta">
+            <span class="news-date">14 Фев 2025</span>
+            <span class="news-tag" style="background:var(--green-dim);color:var(--green)">📈 Позитивно</span>
+          </div>
+        </div>
+      </div>
+      <div class="news-item">
+        <div class="news-dot" style="background:var(--blue)"></div>
+        <div class="news-content">
+          <div class="news-title">Нова жилищна сграда от висок клас с 80 апартамента в Лозенец</div>
+          <div class="news-meta">
+            <span class="news-date">08 Фев 2025</span>
+            <span class="news-tag" style="background:var(--blue-dim);color:var(--blue)">ℹ Неутрално</span>
+          </div>
+        </div>
+      </div>
+      <div class="news-item">
+        <div class="news-dot" style="background:var(--gold)"></div>
+        <div class="news-content">
+          <div class="news-title">Реновация на Южния парк — нови детски площадки и велоалеи</div>
+          <div class="news-meta">
+            <span class="news-date">02 Фев 2025</span>
+            <span class="news-tag" style="background:var(--green-dim);color:var(--green)">📈 Позитивно</span>
+          </div>
+        </div>
+      </div>
+      <div class="news-item">
+        <div class="news-dot" style="background:var(--orange)"></div>
+        <div class="news-content">
+          <div class="news-title">Ремонт на бул. Витоша — затруднен трафик до края на годината</div>
+          <div class="news-meta">
+            <span class="news-date">28 Яну 2025</span>
+            <span class="news-tag" style="background:var(--orange-dim);color:var(--orange)">⚠ Временно</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
+
+  const districts = {
+    lozents:  { name:'🏙️ Лозенец',    score:7.8, grade:'⭐ Много добър', infra:8.5, price:8.0, transport:7.0, green:8.2, services:9.0, safety:6.5 },
+    mladost:  { name:'🏢 Младост',     score:7.2, grade:'✅ Добър',       infra:7.8, price:7.5, transport:8.5, green:6.5, services:8.0, safety:7.8 },
+    vitosha:  { name:'🌿 Витоша',      score:8.1, grade:'⭐ Много добър', infra:7.5, price:7.8, transport:6.5, green:9.5, services:7.0, safety:8.5 },
+    student:  { name:'🎓 Студентски',  score:6.5, grade:'📊 Среден',      infra:6.8, price:5.5, transport:8.0, green:7.0, services:7.5, safety:6.0 },
+    nadezhda: { name:'🏘️ Надежда',    score:5.8, grade:'📊 Среден',      infra:5.5, price:6.2, transport:7.5, green:5.0, services:6.0, safety:5.5 },
+    lyulin:   { name:'🏗️ Люлин',      score:5.2, grade:'⚪ Задоволителен',infra:5.0, price:7.0, transport:6.5, green:5.5, services:5.5, safety:4.8 },
+    boyana:   { name:'🏡 Бояна',       score:8.5, grade:'🏆 Отличен',     infra:8.0, price:8.5, transport:5.5, green:9.8, services:7.5, safety:9.0 },
+    simeonovo:{ name:'🌲 Симеоново',   score:8.8, grade:'🏆 Отличен',     infra:8.2, price:9.0, transport:5.0, green:9.9, services:7.0, safety:9.5 },
+  };
+
+  function changeDistrict(key) {
+    const d = districts[key];
+    if(!d) return;
+    document.getElementById('districtName').textContent = d.name;
+    document.getElementById('scoreBig').textContent = d.score;
+    document.getElementById('scoreGrade').textContent = d.grade;
+    document.getElementById('catInfra').textContent = d.infra;
+    document.getElementById('catPrice').textContent = d.price;
+    document.getElementById('catTransport').textContent = d.transport;
+    document.getElementById('catGreen').textContent = d.green;
+    document.getElementById('catServices').textContent = d.services;
+    document.getElementById('catSafety').textContent = d.safety;
+
+    // Update bars
+    const bars = document.querySelectorAll('.cat-fill');
+    const vals = [d.infra, d.price, d.transport, d.green, d.services, d.safety];
+    bars.forEach((b,i) => {
+      b.style.width = (vals[i]*10) + '%';
+      b.style.background = vals[i] >= 7.5 ? 'var(--green)' : vals[i] >= 5.5 ? 'var(--gold)' : 'var(--red)';
+    });
+
+    // Update score color
+    const color = d.score >= 7.5 ? 'var(--green)' : d.score >= 5.5 ? 'var(--gold)' : 'var(--red)';
+    document.getElementById('scoreBig').style.color = color;
+  }
+
+  // CURSOR
+  const cursor=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursor.style.left=mx-5+'px'; cursor.style.top=my-5+'px'; });
+  function animRing(){ rx+=(mx-rx-16)*0.12; ry+=(my-ry-16)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); }
+  animRing();
+  document.querySelectorAll('a,button,input,select').forEach(el=>{ el.addEventListener('mouseenter',()=>cursor.style.transform='scale(2.5)'); el.addEventListener('mouseleave',()=>cursor.style.transform='scale(1)'); });
+
+  // MOBILE SIDEBAR
+  function toggleSidebar(){
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('burgerBtn').classList.toggle('open');
+    document.getElementById('mobileOverlay').classList.toggle('show');
+  }
+  function closeSidebar(){
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('burgerBtn').classList.remove('open');
+    document.getElementById('mobileOverlay').classList.remove('show');
+  }
+  // Close sidebar on nav click (mobile)
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', closeSidebar));
+
+</script>
+</body>
+</html>

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ImotIQ — Настройки</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#C9A84C; --gold-light:#E8C97A; --gold-dim:rgba(201,168,76,0.12);
+    --dark:#0A0A0F; --dark-2:#111118; --dark-3:#1A1A24;
+    --cream:#F5F0E8; --cream-dim:#D4CCB8;
+    --green:#2ECC8A; --green-dim:rgba(46,204,138,0.12);
+    --red:#E84C4C; --red-dim:rgba(232,76,76,0.12);
+    --blue:#4C7AC9; --blue-dim:rgba(76,122,201,0.12);
+    --sidebar:260px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--dark);color:var(--cream);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;cursor:none;}
+  .cursor{width:10px;height:10px;background:var(--gold);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform 0.15s;mix-blend-mode:difference;}
+  .cursor-ring{width:32px;height:32px;border:1px solid rgba(201,168,76,0.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:all 0.08s;}
+
+  /* SIDEBAR */
+  .sidebar{width:var(--sidebar);min-height:100vh;background:var(--dark-2);border-right:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+  .sidebar-logo{padding:28px 24px 24px;border-bottom:1px solid rgba(255,255,255,0.05);font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;}
+  .sidebar-logo span{color:var(--gold);}
+  .sidebar-section{padding:20px 16px 8px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(212,204,184,0.3);}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:2px 8px;border-radius:8px;cursor:none;transition:all 0.2s;color:var(--cream-dim);font-size:0.88rem;text-decoration:none;position:relative;}
+  .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--cream);}
+  .nav-item.active{background:var(--gold-dim);color:var(--gold);}
+  .nav-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--gold);border-radius:0 3px 3px 0;}
+  .nav-icon{width:18px;font-size:1rem;text-align:center;}
+  .nav-badge{margin-left:auto;background:var(--gold);color:var(--dark);font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:100px;font-family:'Syne',sans-serif;}
+  .sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,0.05);}
+  .plan-widget{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px;margin-bottom:12px;}
+  .plan-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;color:var(--gold);margin-bottom:4px;}
+  .plan-usage{font-size:0.72rem;color:var(--cream-dim);margin-bottom:8px;}
+  .usage-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+  .usage-fill{height:100%;background:var(--gold);border-radius:3px;}
+  .upgrade-btn{display:block;text-align:center;padding:8px;background:var(--gold);color:var(--dark);border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;text-decoration:none;margin-top:10px;cursor:none;transition:background 0.2s;}
+  .upgrade-btn:hover{background:var(--gold-light);}
+  .user-row{display:flex;align-items:center;gap:10px;}
+  .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),#8B6A1F);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--dark);flex-shrink:0;}
+  .user-name{font-size:0.82rem;font-weight:500;}
+  .user-plan{font-size:0.7rem;color:var(--cream-dim);}
+  .logout-btn{margin-left:auto;background:none;border:none;color:rgba(212,204,184,0.3);cursor:none;font-size:0.8rem;transition:color 0.2s;}
+  .logout-btn:hover{color:var(--red);}
+
+  /* MAIN */
+  .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+  .topbar{padding:20px 36px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;background:var(--dark);position:sticky;top:0;z-index:40;}
+  .page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;}
+  .notif-btn{width:36px;height:36px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;position:relative;}
+  .notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--gold);border-radius:50%;border:1.5px solid var(--dark);}
+  .content{padding:32px 36px;flex:1;}
+
+  /* SETTINGS LAYOUT */
+  .settings-layout{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:start;}
+
+  /* SETTINGS NAV */
+  .settings-nav{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden;position:sticky;top:88px;}
+  .snav-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:none;transition:all 0.2s;color:var(--cream-dim);font-size:0.84rem;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .snav-item:last-child{border-bottom:none;}
+  .snav-item:hover{background:rgba(255,255,255,0.04);color:var(--cream);}
+  .snav-item.active{background:var(--gold-dim);color:var(--gold);}
+  .snav-icon{font-size:1rem;width:20px;text-align:center;}
+
+  /* SECTION */
+  .settings-content{display:flex;flex-direction:column;gap:20px;}
+  .section{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;}
+  .section::before{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
+  .section-head{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:3px;}
+  .section-sub{font-size:0.76rem;color:var(--cream-dim);}
+  .section-body{padding:0;}
+
+  /* SETTING ROW */
+  .setting-row{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.03);gap:20px;}
+  .setting-row:last-child{border-bottom:none;}
+  .setting-row:hover{background:rgba(255,255,255,0.01);}
+  .setting-info{flex:1;}
+  .setting-label{font-size:0.86rem;font-weight:500;margin-bottom:3px;}
+  .setting-desc{font-size:0.75rem;color:var(--cream-dim);}
+  .setting-control{flex-shrink:0;}
+
+  /* TOGGLE */
+  .toggle{position:relative;width:44px;height:24px;cursor:none;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .toggle-track{position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:24px;transition:background 0.2s;}
+  .toggle input:checked + .toggle-track{background:var(--gold);}
+  .toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+  .toggle input:checked ~ .toggle-thumb{transform:translateX(20px);}
+
+  /* INPUT */
+  .setting-input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px 12px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.84rem;outline:none;transition:border-color 0.2s;width:180px;}
+  .setting-input:focus{border-color:rgba(201,168,76,0.4);}
+
+  /* SELECT */
+  .setting-select{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px 12px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.84rem;outline:none;cursor:none;min-width:160px;}
+
+  /* PROFILE CARD */
+  .profile-card{padding:24px;display:flex;align-items:center;gap:20px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .profile-avatar{width:64px;height:64px;background:linear-gradient(135deg,var(--gold),#8B6A1F);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--dark);flex-shrink:0;}
+  .profile-info{flex:1;}
+  .profile-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:4px;}
+  .profile-email{font-size:0.82rem;color:var(--cream-dim);margin-bottom:8px;}
+  .profile-badge{display:inline-flex;align-items:center;gap:5px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.25);border-radius:100px;padding:4px 10px;font-size:0.7rem;color:var(--gold);font-family:'Syne',sans-serif;font-weight:600;}
+  .edit-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:var(--cream-dim);padding:8px 18px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:none;transition:all 0.2s;}
+  .edit-btn:hover{border-color:rgba(201,168,76,0.3);color:var(--cream);}
+
+  /* PLAN CARD */
+  .plan-section{padding:24px;}
+  .current-plan{background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;margin-bottom:16px;}
+  .plan-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .plan-title-big{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;}
+  .plan-price-big{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--gold);}
+  .plan-features-list{display:flex;flex-direction:column;gap:6px;}
+  .plan-feat{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--cream-dim);}
+  .feat-check{color:var(--green);font-size:0.8rem;}
+  .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .plan-opt{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:16px;text-align:center;cursor:none;transition:all 0.2s;}
+  .plan-opt:hover{border-color:rgba(201,168,76,0.25);background:rgba(201,168,76,0.04);}
+  .plan-opt-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;margin-bottom:6px;}
+  .plan-opt-price{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--gold);}
+  .plan-opt-per{font-size:0.65rem;color:var(--cream-dim);}
+  .plan-opt-btn{display:block;margin-top:12px;padding:7px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.25);border-radius:6px;color:var(--gold);font-family:'Syne',sans-serif;font-weight:600;font-size:0.72rem;cursor:none;transition:all 0.2s;text-decoration:none;}
+  .plan-opt-btn:hover{background:var(--gold);color:var(--dark);}
+
+  /* SOURCES */
+  .source-row{display:flex;align-items:center;gap:14px;padding:14px 24px;border-bottom:1px solid rgba(255,255,255,0.03);}
+  .source-row:last-child{border-bottom:none;}
+  .source-icon{font-size:1.2rem;width:32px;text-align:center;}
+  .source-info{flex:1;}
+  .source-name{font-size:0.86rem;font-weight:500;}
+  .source-desc{font-size:0.73rem;color:var(--cream-dim);}
+  .source-priority{font-size:0.65rem;padding:2px 7px;border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;margin-right:8px;}
+  .pri-high{background:var(--green-dim);color:var(--green);}
+  .pri-med{background:var(--gold-dim);color:var(--gold);}
+  .pri-low{background:rgba(255,255,255,0.06);color:var(--cream-dim);}
+
+  /* DANGER ZONE */
+  .danger-zone{background:var(--dark-3);border:1px solid rgba(232,76,76,0.2);border-radius:16px;overflow:hidden;}
+  .danger-zone::before{content:'';display:block;height:2px;background:var(--red);}
+  .danger-row{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.03);}
+  .danger-row:last-child{border-bottom:none;}
+  .danger-btn{background:var(--red-dim);border:1px solid rgba(232,76,76,0.25);color:var(--red);padding:8px 18px;border-radius:6px;font-family:'Syne',sans-serif;font-weight:600;font-size:0.78rem;cursor:none;transition:all 0.2s;}
+  .danger-btn:hover{background:var(--red);color:white;}
+
+  /* SAVE BAR */
+  .save-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark-3);border:1px solid rgba(201,168,76,0.25);border-radius:100px;padding:12px 24px;display:none;align-items:center;gap:16px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+  .save-bar.visible{display:flex;animation:slideUp 0.3s ease both;}
+  .save-bar-text{font-size:0.84rem;color:var(--cream-dim);}
+  .save-btn{background:var(--gold);color:var(--dark);border:none;padding:8px 20px;border-radius:100px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;cursor:none;transition:background 0.2s;}
+  .save-btn:hover{background:var(--gold-light);}
+  .discard-btn{background:none;border:none;color:var(--cream-dim);font-size:0.8rem;cursor:none;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  .fade-in{animation:fadeUp 0.5s ease both;}
+  .fade-in:nth-child(2){animation-delay:0.06s;}
+  .fade-in:nth-child(3){animation-delay:0.12s;}
+
+  /* ── MOBILE RESPONSIVE ── */
+  .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:49;backdrop-filter:blur(4px);}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:none;padding:8px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;}
+  .burger span{display:block;width:20px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
+  .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .burger.open span:nth-child(2){opacity:0;}
+  .burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  @media(max-width:900px){
+    .sidebar{transform:translateX(-100%);transition:transform 0.3s ease;box-shadow:none;}
+    .sidebar.open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,0.5);}
+    .mobile-overlay.show{display:block;}
+    .main{margin-left:0 !important;}
+    .burger{display:flex;}
+    .content{padding:20px 16px !important;}
+    .topbar{padding:14px 16px !important;}
+    /* Stack grids on mobile */
+    .stats-grid,.summary-grid,.hero-stats{grid-template-columns:1fr 1fr !important;}
+    .bottom-grid,.main-grid,.comparison,.bottom-row{grid-template-columns:1fr !important;}
+    .calc-layout,.settings-layout{grid-template-columns:1fr !important;}
+    .district-grid{grid-template-columns:1fr 1fr !important;}
+    .forecast-grid{grid-template-columns:1fr 1fr !important;}
+    .alert-form{grid-template-columns:1fr 1fr !important;}
+    .alert-main{grid-template-columns:auto 1fr !important;}
+    .alert-stats,.alert-actions{display:none !important;}
+    .plans-grid{grid-template-columns:1fr !important;}
+    .chart-header{flex-direction:column !important;gap:12px !important;}
+    .url-row,.url-input-wrap{flex-wrap:wrap !important;}
+    .url-inp,.url-input{border-right:1px solid rgba(201,168,76,0.15) !important;border-radius:8px !important;margin-bottom:8px !important;width:100% !important;}
+    .scan-btn,.analyze-btn{border-radius:8px !important;width:100% !important;justify-content:center !important;}
+    .infra-grid{grid-template-columns:repeat(3,1fr) !important;}
+    .chips-wrap{padding-bottom:8px !important;}
+  }
+  @media(max-width:500px){
+    .stats-grid,.summary-grid,.hero-stats{grid-template-columns:1fr !important;}
+    .district-grid,.forecast-grid{grid-template-columns:1fr !important;}
+    .score-overview{grid-template-columns:1fr !important;}
+    .score-main{border-right:none !important;border-bottom:1px solid rgba(255,255,255,0.05) !important;}
+    .checks-grid{grid-template-columns:1fr !important;}
+  }
+
+  /* ── PAGE TRANSITIONS ── */
+  body{opacity:0;animation:pageIn 0.35s ease forwards;}
+  @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .page-exit{animation:pageOut 0.25s ease forwards !important;}
+  @keyframes pageOut{to{opacity:0;transform:translateY(-8px)}}
+</style>
+
+  <!-- ImotIQ Config -->
+  <script>
+    const IMOTIQ_CONFIG = {
+      BACKEND_URL: 'https://script.google.com/macros/s/AKfycbzYJCaEJto02kUpT4ZpdDTb_SX1CqhG8OeMxthn8zpic5OjXGjHmEwAEeaNXfdx4aiThA/exec',
+      VERSION: '1.0',
+    };
+
+    // ── API HELPER ──────────────────────────────────────────
+    async function apiCall(action, data = {}) {
+      try {
+        const res = await fetch(IMOTIQ_CONFIG.BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action, ...data }),
+        });
+        return await res.json();
+      } catch(e) {
+        console.error('API error:', e);
+        return { success: false, error: e.message };
+      }
+    }
+
+    // ── SESSION ─────────────────────────────────────────────
+    function getSession() { return localStorage.getItem('imotiq_session'); }
+    function getUser()    { return JSON.parse(localStorage.getItem('imotiq_user') || 'null'); }
+
+    function checkSession() {
+      if(!getSession() && !window.location.href.includes('landing')) {
+        window.location.href = 'imotiq-landing.html';
+      }
+    }
+
+    // ── LOGOUT ──────────────────────────────────────────────
+    async function logout() {
+      await apiCall('logout', { sessionId: getSession() });
+      localStorage.clear();
+      window.location.href = 'imotiq-landing.html';
+    }
+  </script>
+
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Imot<span>IQ</span></div>
+  <div style="padding:12px 8px 0;">
+    <div class="sidebar-section">Главно</div>
+    <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">🧠</span> AI Анализ</a>
+    <a class="nav-item" href="imotiq-alerts.html"><span class="nav-icon">🔔</span> Моите Alerts<span class="nav-badge">3</span></a>
+
+    <div class="sidebar-section">Пазар</div>
+    <a class="nav-item" href="imotiq-tracker.html"><span class="nav-icon">📊</span> Квартален Трекер</a>
+    <a class="nav-item" href="imotiq-trend.html"><span class="nav-icon">📈</span> Ценови Тренд</a>
+    <a class="nav-item" href="imotiq-report.html"><span class="nav-icon">🏘️</span> Квартален Доклад</a>
+
+    <div class="sidebar-section">Инструменти</div>
+    <a class="nav-item" href="imotiq-calculator.html"><span class="nav-icon">⚖️</span> Наем vs Купуване</a>
+    <a class="nav-item" href="imotiq-detector.html"><span class="nav-icon">🔍</span> Фалшиви Обяви</a>
+    <a class="nav-item" href="imotiq-history.html"><span class="nav-icon">📋</span> История</a>
+
+    <div class="sidebar-section">Акаунт</div>
+    <a class="nav-item active" href="imotiq-settings.html"><span class="nav-icon">⚙️</span> Настройки</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="plan-widget">
+      <div class="plan-name">🆓 Безплатен план</div>
+      <div class="plan-usage">1 от 1 анализа използван</div>
+      <div class="usage-bar"><div class="usage-fill" style="width:100%"></div></div>
+      <a href="#" class="upgrade-btn">Надгради към Стандарт →</a>
+    </div>
+    <div class="user-row">
+      <div class="avatar">ИИ</div>
+      <div><div class="user-name">Иван Иванов</div><div class="user-plan">Безплатен план</div></div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">⚙️ Настройки</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:0.78rem;color:var(--cream-dim)" id="currentDate"></div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="settings-layout">
+
+      <!-- SETTINGS NAV -->
+      <div class="settings-nav fade-in">
+        <div class="snav-item active" onclick="showSection('profile')"><span class="snav-icon">👤</span> Профил</div>
+        <div class="snav-item" onclick="showSection('plan')"><span class="snav-icon">💳</span> Абонамент</div>
+        <div class="snav-item" onclick="showSection('alerts')"><span class="snav-icon">🔔</span> Известия</div>
+        <div class="snav-item" onclick="showSection('sources')"><span class="snav-icon">🌐</span> Източници</div>
+        <div class="snav-item" onclick="showSection('ai')"><span class="snav-icon">🤖</span> AI Настройки</div>
+        <div class="snav-item" onclick="showSection('privacy')"><span class="snav-icon">🔒</span> Поверителност</div>
+        <div class="snav-item" onclick="showSection('danger')" style="color:var(--red);opacity:0.7;"><span class="snav-icon">⚠️</span> Изтриване</div>
+      </div>
+
+      <!-- SETTINGS CONTENT -->
+      <div class="settings-content">
+
+        <!-- PROFILE -->
+        <div class="section fade-in" id="sec-profile">
+          <div class="section-head">
+            <div class="section-title">👤 Профил</div>
+            <div class="section-sub">Твоята лична информация</div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-avatar">ИИ</div>
+            <div class="profile-info">
+              <div class="profile-name">Иван Иванов</div>
+              <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e18897808fa18499808c918d84cf8386">[email&#160;protected]</a></div>
+              <div class="profile-badge">🆓 Безплатен план</div>
+            </div>
+            <button class="edit-btn">✏️ Редактирай</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Име</div><div class="setting-desc">Твоето пълно име</div></div>
+            <input class="setting-input" value="Иван Иванов" oninput="showSaveBar()">
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Имейл</div><div class="setting-desc">Използва се за вход и известия</div></div>
+            <input class="setting-input" value="ivan@example.bg" oninput="showSaveBar()">
+          </div>
+          <div class="setting-row" style="opacity:0.5;">
+            <div class="setting-info">
+              <div class="setting-label">Телефон <span style="font-size:0.65rem;background:rgba(255,255,255,0.06);color:var(--cream-dim);padding:2px 7px;border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;margin-left:6px;">СКОРО</span></div>
+              <div class="setting-desc">По желание — за SMS известия (в разработка)</div>
+            </div>
+            <input class="setting-input" placeholder="+359 88..." disabled style="cursor:not-allowed;opacity:0.5;">
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Смени парола</div><div class="setting-desc">Последна смяна: никога</div></div>
+            <button class="edit-btn">🔑 Смени</button>
+          </div>
+        </div>
+
+        <!-- PLAN -->
+        <div class="section fade-in" id="sec-plan" style="display:none">
+          <div class="section-head">
+            <div class="section-title">💳 Абонамент</div>
+            <div class="section-sub">Управлявай плана си</div>
+          </div>
+          <div class="plan-section">
+            <div class="current-plan">
+              <div class="plan-row">
+                <div>
+                  <div class="plan-title-big">🆓 Безплатен план</div>
+                  <div style="font-size:0.76rem;color:var(--cream-dim);margin-top:4px;">Активен · Без срок</div>
+                </div>
+                <div class="plan-price-big">0 лв</div>
+              </div>
+              <div class="plan-features-list">
+                <div class="plan-feat"><span class="feat-check">✓</span> 1 AI оценка на месец</div>
+                <div class="plan-feat"><span class="feat-check">✓</span> Базов квартален трекер</div>
+                <div class="plan-feat" style="opacity:0.4;"><span style="color:var(--red)">✗</span> Неограничени анализи</div>
+                <div class="plan-feat" style="opacity:0.4;"><span style="color:var(--red)">✗</span> Фалшива обява детектор</div>
+              </div>
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;margin-bottom:12px;color:var(--cream-dim);">Надгради до:</div>
+            <div class="plans-grid">
+              <div class="plan-opt">
+                <div class="plan-opt-name">Стандарт</div>
+                <div class="plan-opt-price">15</div>
+                <div class="plan-opt-per">лв / месец</div>
+                <a href="#" class="plan-opt-btn">Избери</a>
+              </div>
+              <div class="plan-opt" style="border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.04);">
+                <div style="font-size:0.6rem;color:var(--gold);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:4px;">⭐ ПОПУЛЯРЕН</div>
+                <div class="plan-opt-name">Про</div>
+                <div class="plan-opt-price">39</div>
+                <div class="plan-opt-per">лв / месец</div>
+                <a href="#" class="plan-opt-btn" style="background:var(--gold);color:var(--dark);border-color:var(--gold);">Избери</a>
+              </div>
+              <div class="plan-opt">
+                <div class="plan-opt-name">Брокер</div>
+                <div class="plan-opt-price">99</div>
+                <div class="plan-opt-per">лв / месец</div>
+                <a href="#" class="plan-opt-btn">Избери</a>
+              </div>
+            </div>
+          </div>
+          <div class="setting-row" style="border-top:1px solid rgba(255,255,255,0.05);">
+            <div class="setting-info"><div class="setting-label">Метод на плащане</div><div class="setting-desc">PayPal или банков превод</div></div>
+            <select class="setting-select" oninput="showSaveBar()">
+              <option>💙 PayPal</option>
+              <option>💳 Банкова карта (скоро)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ALERTS -->
+        <div class="section fade-in" id="sec-alerts" style="display:none">
+          <div class="section-head">
+            <div class="section-title">🔔 Известия и Alerts</div>
+            <div class="section-sub">Контролирай кога и как да получаваш известия</div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Email известия</div><div class="setting-desc">Получавай alerts на имейл</div></div>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Седмичен digest</div><div class="setting-desc">Обобщение всяка неделя</div></div>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Нови обяви в района</div><div class="setting-desc">Веднага при нова обява по критерии</div></div>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Спад в цена</div><div class="setting-desc">Когато следена обява поевтинее</div></div>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Квартален месечен доклад</div><div class="setting-desc">PDF доклад на 1-во число</div></div>
+            <label class="toggle"><input type="checkbox" onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Честота на alerts</div><div class="setting-desc">Колко често да получаваш</div></div>
+            <select class="setting-select" onchange="showSaveBar()">
+              <option>Веднага</option>
+              <option>Веднъж дневно</option>
+              <option>Веднъж седмично</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- SOURCES -->
+        <div class="section fade-in" id="sec-sources" style="display:none">
+          <div class="section-head">
+            <div class="section-title">🌐 Източници на данни</div>
+            <div class="section-sub">Избери откъде AI да събира информация</div>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">🏠</div>
+            <div class="source-info"><div class="source-name">Imot.bg</div><div class="source-desc">Основен БГ портал за имоти</div></div>
+            <span class="source-priority pri-high">Основен</span>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">🏡</div>
+            <div class="source-info"><div class="source-name">Homes.bg</div><div class="source-desc">Втори по-голям портал</div></div>
+            <span class="source-priority pri-high">Основен</span>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">🏢</div>
+            <div class="source-info"><div class="source-name">Bulgarian Properties</div><div class="source-desc">Висок клас имоти</div></div>
+            <span class="source-priority pri-med">Вторичен</span>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">🔵</div>
+            <div class="source-info"><div class="source-name">Facebook Marketplace</div><div class="source-desc">Частни обяви без посредник</div></div>
+            <span class="source-priority pri-med">Вторичен</span>
+            <label class="toggle"><input type="checkbox" onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">📊</div>
+            <div class="source-info"><div class="source-name">НСИ — Статистика</div><div class="source-desc">Официални ценови данни</div></div>
+            <span class="source-priority pri-high">Основен</span>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">📰</div>
+            <div class="source-info"><div class="source-name">Google News — имоти</div><div class="source-desc">Актуални новини за пазара</div></div>
+            <span class="source-priority pri-med">Вторичен</span>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">🏛️</div>
+            <div class="source-info"><div class="source-name">Столична Община</div><div class="source-desc">Строителни разрешения и проекти</div></div>
+            <span class="source-priority pri-med">Вторичен</span>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">🟠</div>
+            <div class="source-info"><div class="source-name">OLX.bg</div><div class="source-desc">Второстепенен — по-ниско качество</div></div>
+            <span class="source-priority pri-low">Опционален</span>
+            <label class="toggle"><input type="checkbox" onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+
+        <!-- AI -->
+        <div class="section fade-in" id="sec-ai" style="display:none">
+          <div class="section-head">
+            <div class="section-title">🤖 AI Настройки</div>
+            <div class="section-sub">Персонализирай как AI анализира за теб</div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Профил на търсене</div><div class="setting-desc">Какво търсиш в момента</div></div>
+            <select class="setting-select" onchange="showSaveBar()">
+              <option>🏠 Купувам за живеене</option>
+              <option>💰 Инвестирам</option>
+              <option>🔑 Наемам</option>
+              <option>📋 Продавам</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Бюджет</div><div class="setting-desc">AI взима предвид при анализи</div></div>
+            <input class="setting-input" placeholder="напр. 200000 лв" oninput="showSaveBar()">
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Предпочитани квартали</div><div class="setting-desc">За по-релевантни alerts</div></div>
+            <input class="setting-input" placeholder="Лозенец, Младост..." oninput="showSaveBar()">
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Минимална площ</div><div class="setting-desc">Филтрирай малки имоти</div></div>
+            <input class="setting-input" placeholder="напр. 60 м²" oninput="showSaveBar()">
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">AI Строгост при фалшиви обяви</div><div class="setting-desc">По-строго = повече предупреждения</div></div>
+            <select class="setting-select" onchange="showSaveBar()">
+              <option>🟢 Балансирано</option>
+              <option>🔴 Строго</option>
+              <option>🟡 Леко</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Език на докладите</div><div class="setting-desc">Езикът на AI генерираното съдържание</div></div>
+            <select class="setting-select" onchange="showSaveBar()">
+              <option>🇧🇬 Български</option>
+              <option>🇬🇧 English</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- PRIVACY -->
+        <div class="section fade-in" id="sec-privacy" style="display:none">
+          <div class="section-head">
+            <div class="section-title">🔒 Поверителност</div>
+            <div class="section-sub">Контролирай данните си</div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Запазване на история</div><div class="setting-desc">Пазим анализите ти за препратка</div></div>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Анонимна статистика</div><div class="setting-desc">Помага ни да подобрим продукта</div></div>
+            <label class="toggle"><input type="checkbox" checked onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Двуфакторна автентикация</div><div class="setting-desc">По-сигурен вход в профила</div></div>
+            <label class="toggle"><input type="checkbox" onchange="showSaveBar()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Свали данните ми</div><div class="setting-desc">Експортирай всичко в JSON</div></div>
+            <button class="edit-btn">📥 Свали</button>
+          </div>
+        </div>
+
+        <!-- DANGER -->
+        <div class="danger-zone fade-in" id="sec-danger" style="display:none">
+          <div class="section-head" style="padding:20px 24px;border-bottom:1px solid rgba(232,76,76,0.1);">
+            <div class="section-title" style="color:var(--red);">⚠️ Опасна зона</div>
+            <div class="section-sub">Тези действия са необратими</div>
+          </div>
+          <div class="danger-row">
+            <div class="setting-info"><div class="setting-label">Изтрий историята</div><div class="setting-desc">Премахва всички анализи и сканирания</div></div>
+            <button class="danger-btn">🗑️ Изтрий историята</button>
+          </div>
+          <div class="danger-row">
+            <div class="setting-info"><div class="setting-label">Спри абонамента</div><div class="setting-desc">Преминаваш към безплатен план</div></div>
+            <button class="danger-btn">⏹️ Спри абонамента</button>
+          </div>
+          <div class="danger-row">
+            <div class="setting-info"><div class="setting-label">Изтрий профила</div><div class="setting-desc">Всички данни се изтриват завинаги</div></div>
+            <button class="danger-btn">💀 Изтрий профила</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- SAVE BAR -->
+<div class="save-bar" id="saveBar">
+  <span class="save-bar-text">Имаш незапазени промени</span>
+  <button class="discard-btn" onclick="hideSaveBar()">Откажи</button>
+  <button class="save-btn" onclick="saveSettings()">💾 Запази промените</button>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">
+  // MOBILE SIDEBAR
+  function toggleSidebar(){
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('burgerBtn').classList.toggle('open');
+    document.getElementById('mobileOverlay').classList.toggle('show');
+  }
+  function closeSidebar(){
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('burgerBtn').classList.remove('open');
+    document.getElementById('mobileOverlay').classList.remove('show');
+  }
+  // Close sidebar on nav click (mobile)
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', closeSidebar));
+
+</script><script>
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
+
+  function showSection(id) {
+    document.querySelectorAll('.snav-item').forEach(i=>i.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    const sections = ['profile','plan','alerts','sources','ai','privacy','danger'];
+    sections.forEach(s => {
+      const el = document.getElementById('sec-'+s);
+      if(el) el.style.display = s===id ? 'block' : 'none';
+    });
+  }
+
+  function showSaveBar() {
+    document.getElementById('saveBar').classList.add('visible');
+  }
+
+  function hideSaveBar() {
+    document.getElementById('saveBar').classList.remove('visible');
+  }
+
+  function saveSettings() {
+    const btn = document.querySelector('.save-btn');
+    btn.textContent = '✓ Запазено!';
+    btn.style.background = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = '💾 Запази промените';
+      btn.style.background = '';
+      hideSaveBar();
+    }, 1800);
+  }
+
+  // CURSOR
+  const cursor=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursor.style.left=mx-5+'px'; cursor.style.top=my-5+'px'; });
+  function animRing(){ rx+=(mx-rx-16)*0.12; ry+=(my-ry-16)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); }
+  animRing();
+  document.querySelectorA

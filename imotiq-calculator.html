@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ImotIQ — Наем vs Купуване</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --gold:#C9A84C; --gold-light:#E8C97A; --gold-dim:rgba(201,168,76,0.12);
+    --dark:#0A0A0F; --dark-2:#111118; --dark-3:#1A1A24;
+    --cream:#F5F0E8; --cream-dim:#D4CCB8;
+    --green:#2ECC8A; --green-dim:rgba(46,204,138,0.12);
+    --red:#E84C4C; --red-dim:rgba(232,76,76,0.12);
+    --blue:#4C7AC9; --blue-dim:rgba(76,122,201,0.12);
+    --sidebar:260px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--dark);color:var(--cream);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;cursor:none;}
+  .cursor{width:10px;height:10px;background:var(--gold);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform 0.15s;mix-blend-mode:difference;}
+  .cursor-ring{width:32px;height:32px;border:1px solid rgba(201,168,76,0.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:all 0.08s;}
+
+  /* SIDEBAR */
+  .sidebar{width:var(--sidebar);min-height:100vh;background:var(--dark-2);border-right:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+  .sidebar-logo{padding:28px 24px 24px;border-bottom:1px solid rgba(255,255,255,0.05);font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;}
+  .sidebar-logo span{color:var(--gold);}
+  .sidebar-section{padding:20px 16px 8px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(212,204,184,0.3);}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:2px 8px;border-radius:8px;cursor:none;transition:all 0.2s;color:var(--cream-dim);font-size:0.88rem;text-decoration:none;position:relative;}
+  .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--cream);}
+  .nav-item.active{background:var(--gold-dim);color:var(--gold);}
+  .nav-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--gold);border-radius:0 3px 3px 0;}
+  .nav-icon{width:18px;font-size:1rem;text-align:center;}
+  .nav-badge{margin-left:auto;background:var(--gold);color:var(--dark);font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:100px;font-family:'Syne',sans-serif;}
+  .sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,0.05);}
+  .plan-widget{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px;margin-bottom:12px;}
+  .plan-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;color:var(--gold);margin-bottom:4px;}
+  .plan-usage{font-size:0.72rem;color:var(--cream-dim);margin-bottom:8px;}
+  .usage-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+  .usage-fill{height:100%;background:var(--gold);border-radius:3px;}
+  .upgrade-btn{display:block;text-align:center;padding:8px;background:var(--gold);color:var(--dark);border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;text-decoration:none;margin-top:10px;cursor:none;transition:background 0.2s;}
+  .upgrade-btn:hover{background:var(--gold-light);}
+  .user-row{display:flex;align-items:center;gap:10px;}
+  .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),#8B6A1F);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--dark);flex-shrink:0;}
+  .user-name{font-size:0.82rem;font-weight:500;}
+  .user-plan{font-size:0.7rem;color:var(--cream-dim);}
+  .logout-btn{margin-left:auto;background:none;border:none;color:rgba(212,204,184,0.3);cursor:none;font-size:0.8rem;transition:color 0.2s;}
+  .logout-btn:hover{color:var(--red);}
+
+  /* MAIN */
+  .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+  .topbar{padding:20px 36px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;background:var(--dark);position:sticky;top:0;z-index:40;}
+  .page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;}
+  .notif-btn{width:36px;height:36px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;position:relative;}
+  .notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--gold);border-radius:50%;border:1.5px solid var(--dark);}
+  .content{padding:32px 36px;flex:1;}
+
+  /* LAYOUT */
+  .calc-layout{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+
+  /* INPUT PANEL */
+  .input-panel{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;position:sticky;top:88px;}
+  .input-panel::before{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
+
+  .panel-tabs{display:flex;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.05);}
+  .ptab{flex:1;padding:14px;border:none;background:none;color:var(--cream-dim);font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;cursor:none;transition:all 0.2s;border-bottom:2px solid transparent;}
+  .ptab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+  .panel-body{padding:24px;}
+  .field-group{margin-bottom:20px;}
+  .field-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--cream-dim);margin-bottom:8px;display:flex;justify-content:space-between;}
+  .field-val{font-family:'Syne',sans-serif;font-weight:700;color:var(--gold);}
+
+  /* SLIDER */
+  .slider{width:100%;-webkit-appearance:none;appearance:none;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;outline:none;cursor:none;}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:none;border:3px solid var(--dark-3);box-shadow:0 0 0 1px rgba(201,168,76,0.4);transition:transform 0.2s;}
+  .slider:hover::-webkit-slider-thumb{transform:scale(1.2);}
+  .slider-track{position:relative;margin-top:4px;}
+  .slider-labels{display:flex;justify-content:space-between;margin-top:6px;}
+  .slider-label{font-size:0.65rem;color:rgba(212,204,184,0.3);}
+
+  .field-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:10px 14px;color:var(--cream);font-family:'DM Mono',monospace;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+  .field-input:focus{border-color:rgba(201,168,76,0.4);}
+
+  .divider{height:1px;background:rgba(255,255,255,0.05);margin:20px 0;}
+
+  .calc-btn{width:100%;padding:14px;background:var(--gold);color:var(--dark);border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;cursor:none;transition:all 0.2s;margin-top:4px;}
+  .calc-btn:hover{background:var(--gold-light);transform:translateY(-1px);}
+
+  /* RESULTS PANEL */
+  .results-panel{display:flex;flex-direction:column;gap:16px;}
+
+  /* VERDICT CARD */
+  .verdict-card{border-radius:16px;padding:32px;position:relative;overflow:hidden;}
+  .verdict-card.buy{background:linear-gradient(135deg,rgba(46,204,138,0.12),rgba(46,204,138,0.04));border:1px solid rgba(46,204,138,0.25);}
+  .verdict-card.rent{background:linear-gradient(135deg,rgba(76,122,201,0.12),rgba(76,122,201,0.04));border:1px solid rgba(76,122,201,0.25);}
+  .verdict-card.neutral{background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.2);}
+  .verdict-bg{position:absolute;top:-20px;right:-20px;font-size:8rem;opacity:0.04;pointer-events:none;}
+  .verdict-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;}
+  .verdict-label.buy{color:var(--green);}
+  .verdict-label.rent{color:var(--blue);}
+  .verdict-label.neutral{color:var(--gold);}
+  .verdict-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;line-height:1.1;margin-bottom:8px;}
+  .verdict-sub{font-size:0.88rem;color:var(--cream-dim);font-weight:300;line-height:1.6;max-width:480px;}
+
+  /* COMPARISON GRID */
+  .comparison{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .comp-card{background:var(--dark-3);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:20px;position:relative;overflow:hidden;}
+  .comp-card.winner{border-color:rgba(46,204,138,0.3);}
+  .comp-card.winner::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);}
+  .comp-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .comp-icon{font-size:1.4rem;}
+  .comp-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;}
+  .comp-badge{margin-left:auto;font-size:0.62rem;font-weight:700;padding:3px 8px;border-radius:100px;font-family:'Syne',sans-serif;}
+  .comp-badge.winner{background:var(--green-dim);color:var(--green);}
+  .comp-badge.loser{background:rgba(255,255,255,0.05);color:var(--cream-dim);}
+  .comp-main{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;line-height:1;margin-bottom:4px;}
+  .comp-main.green{color:var(--green);}
+  .comp-main.blue{color:var(--blue);}
+  .comp-unit{font-size:0.72rem;color:var(--cream-dim);margin-bottom:14px;}
+  .comp-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.8rem;}
+  .comp-row:last-child{border-bottom:none;}
+  .comp-row-label{color:var(--cream-dim);}
+  .comp-row-val{font-weight:500;font-family:'DM Mono',monospace;font-size:0.78rem;}
+
+  /* CHART CARD */
+  .chart-panel{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:28px;}
+  .chart-panel::before{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--gold),transparent);margin:-28px -28px 24px;}
+
+  /* BREAKEVEN */
+  .breakeven-card{background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background-clip:padding-box;}
+  .be-stat{text-align:center;padding:20px;background:var(--dark-3);}
+  .be-val{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--gold);}
+  .be-label{font-size:0.72rem;color:var(--cream-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .fade-in{animation:fadeUp 0.5s ease both;}
+  .fade-in:nth-child(2){animation-delay:0.08s;}
+  .fade-in:nth-child(3){animation-delay:0.16s;}
+  .fade-in:nth-child(4){animation-delay:0.24s;}
+
+  /* ── MOBILE RESPONSIVE ── */
+  .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:49;backdrop-filter:blur(4px);}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:none;padding:8px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;}
+  .burger span{display:block;width:20px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
+  .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .burger.open span:nth-child(2){opacity:0;}
+  .burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  @media(max-width:900px){
+    .sidebar{transform:translateX(-100%);transition:transform 0.3s ease;box-shadow:none;}
+    .sidebar.open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,0.5);}
+    .mobile-overlay.show{display:block;}
+    .main{margin-left:0 !important;}
+    .burger{display:flex;}
+    .content{padding:20px 16px !important;}
+    .topbar{padding:14px 16px !important;}
+    /* Stack grids on mobile */
+    .stats-grid,.summary-grid,.hero-stats{grid-template-columns:1fr 1fr !important;}
+    .bottom-grid,.main-grid,.comparison,.bottom-row{grid-template-columns:1fr !important;}
+    .calc-layout,.settings-layout{grid-template-columns:1fr !important;}
+    .district-grid{grid-template-columns:1fr 1fr !important;}
+    .forecast-grid{grid-template-columns:1fr 1fr !important;}
+    .alert-form{grid-template-columns:1fr 1fr !important;}
+    .alert-main{grid-template-columns:auto 1fr !important;}
+    .alert-stats,.alert-actions{display:none !important;}
+    .plans-grid{grid-template-columns:1fr !important;}
+    .chart-header{flex-direction:column !important;gap:12px !important;}
+    .url-row,.url-input-wrap{flex-wrap:wrap !important;}
+    .url-inp,.url-input{border-right:1px solid rgba(201,168,76,0.15) !important;border-radius:8px !important;margin-bottom:8px !important;width:100% !important;}
+    .scan-btn,.analyze-btn{border-radius:8px !important;width:100% !important;justify-content:center !important;}
+    .infra-grid{grid-template-columns:repeat(3,1fr) !important;}
+    .chips-wrap{padding-bottom:8px !important;}
+  }
+  @media(max-width:500px){
+    .stats-grid,.summary-grid,.hero-stats{grid-template-columns:1fr !important;}
+    .district-grid,.forecast-grid{grid-template-columns:1fr !important;}
+    .score-overview{grid-template-columns:1fr !important;}
+    .score-main{border-right:none !important;border-bottom:1px solid rgba(255,255,255,0.05) !important;}
+    .checks-grid{grid-template-columns:1fr !important;}
+  }
+
+  /* ── PAGE TRANSITIONS ── */
+  body{opacity:0;animation:pageIn 0.35s ease forwards;}
+  @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .page-exit{animation:pageOut 0.25s ease forwards !important;}
+  @keyframes pageOut{to{opacity:0;transform:translateY(-8px)}}
+</style>
+
+  <!-- ImotIQ Config -->
+  <script>
+    const IMOTIQ_CONFIG = {
+      BACKEND_URL: 'https://script.google.com/macros/s/AKfycbzYJCaEJto02kUpT4ZpdDTb_SX1CqhG8OeMxthn8zpic5OjXGjHmEwAEeaNXfdx4aiThA/exec',
+      VERSION: '1.0',
+    };
+
+    // ── API HELPER ──────────────────────────────────────────
+    async function apiCall(action, data = {}) {
+      try {
+        const res = await fetch(IMOTIQ_CONFIG.BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action, ...data }),
+        });
+        return await res.json();
+      } catch(e) {
+        console.error('API error:', e);
+        return { success: false, error: e.message };
+      }
+    }
+
+    // ── SESSION ─────────────────────────────────────────────
+    function getSession() { return localStorage.getItem('imotiq_session'); }
+    function getUser()    { return JSON.parse(localStorage.getItem('imotiq_user') || 'null'); }
+
+    function checkSession() {
+      if(!getSession() && !window.location.href.includes('landing')) {
+        window.location.href = 'imotiq-landing.html';
+      }
+    }
+
+    // ── LOGOUT ──────────────────────────────────────────────
+    async function logout() {
+      await apiCall('logout', { sessionId: getSession() });
+      localStorage.clear();
+      window.location.href = 'imotiq-landing.html';
+    }
+  </script>
+
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Imot<span>IQ</span></div>
+  <div style="padding:12px 8px 0;">
+    <div class="sidebar-section">Главно</div>
+    <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">⚡</span> Dashboard</a>
+    <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">🧠</span> AI Анализ</a>
+    <a class="nav-item" href="imotiq-alerts.html"><span class="nav-icon">🔔</span> Моите Alerts<span class="nav-badge">3</span></a>
+
+    <div class="sidebar-section">Пазар</div>
+    <a class="nav-item" href="imotiq-tracker.html"><span class="nav-icon">📊</span> Квартален Трекер</a>
+    <a class="nav-item" href="imotiq-trend.html"><span class="nav-icon">📈</span> Ценови Тренд</a>
+    <a class="nav-item" href="imotiq-report.html"><span class="nav-icon">🏘️</span> Квартален Доклад</a>
+
+    <div class="sidebar-section">Инструменти</div>
+    <a class="nav-item active" href="imotiq-calculator.html"><span class="nav-icon">⚖️</span> Наем vs Купуване</a>
+    <a class="nav-item" href="imotiq-detector.html"><span class="nav-icon">🔍</span> Фалшиви Обяви</a>
+    <a class="nav-item" href="imotiq-history.html"><span class="nav-icon">📋</span> История</a>
+
+    <div class="sidebar-section">Акаунт</div>
+    <a class="nav-item" href="imotiq-settings.html"><span class="nav-icon">⚙️</span> Настройки</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="plan-widget">
+      <div class="plan-name">🆓 Безплатен план</div>
+      <div class="plan-usage">1 от 1 анализа използван</div>
+      <div class="usage-bar"><div class="usage-fill" style="width:100%"></div></div>
+      <a href="#" class="upgrade-btn">Надгради към Стандарт →</a>
+    </div>
+    <div class="user-row">
+      <div class="avatar">ИИ</div>
+      <div><div class="user-name">Иван Иванов</div><div class="user-plan">Безплатен план</div></div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">⚖️ Наем vs Купуване</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:0.78rem;color:var(--cream-dim)" id="currentDate"></div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="calc-layout">
+
+      <!-- INPUT PANEL -->
+      <div class="input-panel fade-in">
+        <div class="panel-tabs">
+          <button class="ptab active">🏠 Имотът</button>
+          <button class="ptab">💰 Финанси</button>
+        </div>
+        <div class="panel-body">
+
+          <!-- Имот цена -->
+          <div class="field-group">
+            <div class="field-label">Цена на имота <span class="field-val" id="priceVal">200,000 лв</span></div>
+            <input type="range" class="slider" id="priceSlider" min="50000" max="800000" step="5000" value="200000" oninput="updateSlider()">
+            <div class="slider-labels"><span class="slider-label">50K</span><span class="slider-label">800K лв</span></div>
+          </div>
+
+          <!-- Площ -->
+          <div class="field-group">
+            <div class="field-label">Площ <span class="field-val" id="sizeVal">75 м²</span></div>
+            <input type="range" class="slider" id="sizeSlider" min="30" max="300" step="5" value="75" oninput="updateSlider()">
+            <div class="slider-labels"><span class="slider-label">30 м²</span><span class="slider-label">300 м²</span></div>
+          </div>
+
+          <!-- Наем -->
+          <div class="field-group">
+            <div class="field-label">Алтернативен наем/мес <span class="field-val" id="rentVal">800 лв</span></div>
+            <input type="range" class="slider" id="rentSlider" min="200" max="5000" step="50" value="800" oninput="updateSlider()">
+            <div class="slider-labels"><span class="slider-label">200 лв</span><span class="slider-label">5,000 лв</span></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Самоучастие -->
+          <div class="field-group">
+            <div class="field-label">Самоучастие <span class="field-val" id="downVal">20% — 40,000 лв</span></div>
+            <input type="range" class="slider" id="downSlider" min="10" max="100" step="5" value="20" oninput="updateSlider()">
+            <div class="slider-labels"><span class="slider-label">10%</span><span class="slider-label">100%</span></div>
+          </div>
+
+          <!-- Лихва -->
+          <div class="field-group">
+            <div class="field-label">Лихвен процент <span class="field-val" id="rateVal">3.5%</span></div>
+            <input type="range" class="slider" id="rateSlider" min="1" max="10" step="0.1" value="3.5" oninput="updateSlider()">
+            <div class="slider-labels"><span class="slider-label">1%</span><span class="slider-label">10%</span></div>
+          </div>
+
+          <!-- Срок -->
+          <div class="field-group">
+            <div class="field-label">Срок на кредита <span class="field-val" id="termVal">25 год</span></div>
+            <input type="range" class="slider" id="termSlider" min="5" max="35" step="1" value="25" oninput="updateSlider()">
+            <div class="slider-labels"><span class="slider-label">5 год</span><span class="slider-label">35 год</span></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Ръст на цените -->
+          <div class="field-group">
+            <div class="field-label">Очакван ръст на имотите/год <span class="field-val" id="growthVal">3%</span></div>
+            <input type="range" class="slider" id="growthSlider" min="0" max="10" step="0.5" value="3" oninput="updateSlider()">
+            <div class="slider-labels"><span class="slider-label">0%</span><span class="slider-label">10%</span></div>
+          </div>
+
+          <button class="calc-btn" onclick="calculate()">⚖️ Изчисли сега</button>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="results-panel" id="resultsPanel">
+
+        <!-- VERDICT -->
+        <div class="verdict-card buy fade-in" id="verdictCard">
+          <div class="verdict-bg">🏠</div>
+          <div class="verdict-label buy" id="verdictLabel">Препоръка</div>
+          <div class="verdict-title" id="verdictTitle">Купуването е по-изгодно</div>
+          <div class="verdict-sub" id="verdictSub">При текущите параметри, покупката на имота ще ти спести значителна сума в дългосрочен план спрямо наема.</div>
+        </div>
+
+        <!-- COMPARISON -->
+        <div class="comparison">
+          <div class="comp-card winner fade-in" id="buyCard">
+            <div class="comp-header">
+              <div class="comp-icon">🏠</div>
+              <div class="comp-name">Купуване</div>
+              <span class="comp-badge winner" id="buyBadge">✓ Победител</span>
+            </div>
+            <div class="comp-main green" id="buyMonthly">1,120 лв</div>
+            <div class="comp-unit">месечна вноска</div>
+            <div class="comp-row"><span class="comp-row-label">Кредит</span><span class="comp-row-val" id="loanAmt">160,000 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Месечна вноска</span><span class="comp-row-val" id="monthlyPayment">1,120 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Общо платено</span><span class="comp-row-val" id="totalPaid">336,000 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Стойност след 10г</span><span class="comp-row-val" id="futureVal">268,783 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Нетна позиция</span><span class="comp-row-val" style="color:var(--green)" id="netBuy">+68,783 лв</span></div>
+          </div>
+
+          <div class="comp-card fade-in" id="rentCard">
+            <div class="comp-header">
+              <div class="comp-icon">🔑</div>
+              <div class="comp-name">Наем</div>
+              <span class="comp-badge loser" id="rentBadge">Алтернатива</span>
+            </div>
+            <div class="comp-main blue" id="rentMonthly">800 лв</div>
+            <div class="comp-unit">месечен наем</div>
+            <div class="comp-row"><span class="comp-row-label">Наем/месец</span><span class="comp-row-val" id="rentPerMonth">800 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Наем за 10 год</span><span class="comp-row-val" id="rent10y">96,000 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Инвестиран капитал</span><span class="comp-row-val" id="investedDown">40,000 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Доход от инвестиция</span><span class="comp-row-val" id="investReturn">+21,911 лв</span></div>
+            <div class="comp-row"><span class="comp-row-label">Нетна позиция</span><span class="comp-row-val" style="color:var(--red)" id="netRent">-74,089 лв</span></div>
+          </div>
+        </div>
+
+        <!-- CHART -->
+        <div class="chart-panel fade-in">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">Нетна стойност с времето</div>
+              <div style="font-size:0.75rem;color:var(--cream-dim);margin-top:3px;">Сравнение на финансовата позиция за 30 години</div>
+            </div>
+            <div style="display:flex;gap:16px;">
+              <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--cream-dim)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>Купуване</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--cream-dim)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>Наем</div>
+            </div>
+          </div>
+          <canvas id="timelineChart" height="70"></canvas>
+        </div>
+
+        <!-- BREAKEVEN -->
+        <div style="background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;" class="fade-in">
+          <div style="padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;">📍 Ключови показатели</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.04);">
+            <div style="background:var(--dark-3);padding:22px;text-align:center;">
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--gold)" id="breakevenYear">7.2</div>
+              <div style="font-size:0.72rem;color:var(--cream-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em;">Години до<br>безубезност</div>
+            </div>
+            <div style="background:var(--dark-3);padding:22px;text-align:center;">
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--green)" id="savingsAmt">142,872 лв</div>
+              <div style="font-size:0.72rem;color:var(--cream-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em;">Спестени за<br>30 години</div>
+            </div>
+            <div style="background:var(--dark-3);padding:22px;text-align:center;">
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--blue)" id="pricePerSqm">2,667 лв</div>
+              <div style="font-size:0.72rem;color:var(--cream-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em;">Цена<br>на м²</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
+
+  const fmt = n => Math.round(n).toLocaleString('bg-BG') + ' лв';
+  const fmtN = n => (n>=0?'+':'')+Math.round(n).toLocaleString('bg-BG') + ' лв';
+
+  function updateSlider() {
+    const price = +document.getElementById('priceSlider').value;
+    const size  = +document.getElementById('sizeSlider').value;
+    const rent  = +document.getElementById('rentSlider').value;
+    const down  = +document.getElementById('downSlider').value;
+    const rate  = +document.getElementById('rateSlider').value;
+    const term  = +document.getElementById('termSlider').value;
+    const growth= +document.getElementById('growthSlider').value;
+
+    document.getElementById('priceVal').textContent  = fmt(price);
+    document.getElementById('sizeVal').textContent   = size + ' м²';
+    document.getElementById('rentVal').textContent   = fmt(rent);
+    document.getElementById('downVal').textContent   = down + '% — ' + fmt(price*down/100);
+    document.getElementById('rateVal').textContent   = rate + '%';
+    document.getElementById('termVal').textContent   = term + ' год';
+    document.getElementById('growthVal').textContent = growth + '%';
+
+    calculate();
+  }
+
+  let timelineChart = null;
+
+  function calculate() {
+    const price  = +document.getElementById('priceSlider').value;
+    const size   = +document.getElementById('sizeSlider').value;
+    const rent   = +document.getElementById('rentSlider').value;
+    const downPct= +document.getElementById('downSlider').value;
+    const rate   = +document.getElementById('rateSlider').value;
+    const term   = +document.getElementById('termSlider').value;
+    const growth = +document.getElementById('growthSlider').value;
+
+    const downAmt  = price * downPct / 100;
+    const loan     = price - downAmt;
+    const monthRate= (rate/100)/12;
+    const months   = term * 12;
+
+    // Monthly mortgage payment
+    const monthly = loan * (monthRate * Math.pow(1+monthRate,months)) / (Math.pow(1+monthRate,months)-1);
+    const totalPaid= monthly * months + downAmt;
+
+    // 10 year future value of property
+    const future10 = price * Math.pow(1+growth/100, 10);
+    const netBuy10 = future10 - (monthly*120 + downAmt); // equity gained minus paid
+
+    // Rent scenario: invest down payment at 4% annual
+    const investReturn = downAmt * (Math.pow(1.04,10)-1);
+    const rentTotal10  = rent * 120;
+    const netRent10    = investReturn - rentTotal10;
+
+    // Breakeven: year when buy is better than rent
+    let breakeven = null;
+    for(let y=1; y<=35; y++){
+      const propVal  = price * Math.pow(1+growth/100, y);
+      const paidSoFar= Math.min(y,term)*12 * monthly + downAmt;
+      const buyNet   = propVal - paidSoFar;
+      const rentNetY = downAmt * (Math.pow(1.04,y)-1) - rent*12*y;
+      if(buyNet > rentNetY){ breakeven = y; break; }
+    }
+
+    // 30 year savings
+    const propVal30 = price * Math.pow(1+growth/100,30);
+    const buyNet30  = propVal30 - totalPaid;
+    const rentNet30 = downAmt*(Math.pow(1.04,30)-1) - rent*12*30;
+    const savings30 = buyNet30 - rentNet30;
+
+    // Verdict
+    const isBuy = buyNet10 > netRent10;
+    const vc = document.getElementById('verdictCard');
+    vc.className = 'verdict-card ' + (isBuy?'buy':'rent') + ' fade-in';
+    document.getElementById('verdictLabel').className = 'verdict-label ' + (isBuy?'buy':'rent');
+    document.getElementById('verdictLabel').textContent = 'AI Препоръка';
+    document.getElementById('verdictTitle').textContent = isBuy ? '🏠 Купуването е по-изгодно' : '🔑 Наемът е по-изгоден';
+    document.getElementById('verdictSub').textContent = isBuy
+      ? `При ръст от ${growth}% годишно и вноска от ${Math.round(monthly).toLocaleString()} лв/месец, покупката е по-изгодна. Имотът ще струва ${Math.round(future10).toLocaleString()} лв след 10 години.`
+      : `Месечната вноска от ${Math.round(monthly).toLocaleString()} лв е значително по-висока от наема. Инвестирай самоучастието и наеми за момента.`;
+
+    // Update cards
+    document.getElementById('buyMonthly').textContent  = fmt(monthly);
+    document.getElementById('loanAmt').textContent     = fmt(loan);
+    document.getElementById('monthlyPayment').textContent = fmt(monthly);
+    document.getElementById('totalPaid').textContent   = fmt(totalPaid);
+    document.getElementById('futureVal').textContent   = fmt(future10);
+    document.getElementById('netBuy').textContent      = fmtN(netBuy10);
+    document.getElementById('netBuy').style.color      = netBuy10>=0 ? 'var(--green)' : 'var(--red)';
+
+    document.getElementById('rentMonthly').textContent  = fmt(rent);
+    document.getElementById('rentPerMonth').textContent  = fmt(rent);
+    document.getElementById('rent10y').textContent       = fmt(rentTotal10);
+    document.getElementById('investedDown').textContent  = fmt(downAmt);
+    document.getElementById('investReturn').textContent  = fmtN(investReturn);
+    document.getElementById('netRent').textContent       = fmtN(netRent10);
+    document.getElementById('netRent').style.color       = netRent10>=0 ? 'var(--green)' : 'var(--red)';
+
+    if(isBuy){
+      document.getElementById('buyCard').classList.add('winner');
+      document.getElementById('buyBadge').className='comp-badge winner'; document.getElementById('buyBadge').textContent='✓ Победител';
+      document.getElementById('rentCard').classList.remove('winner');
+      document.getElementById('rentBadge').className='comp-badge loser'; document.getElementById('rentBadge').textContent='Алтернатива';
+    } else {
+      document.getElementById('rentCard').classList.add('winner');
+      document.getElementById('rentBadge').className='comp-badge winner'; document.getElementById('rentBadge').textContent='✓ Победител';
+      document.getElementById('buyCard').classList.remove('winner');
+      document.getElementById('buyBadge').className='comp-badge loser'; document.getElementById('buyBadge').textContent='Алтернатива';
+    }
+
+    document.getElementById('breakevenYear').textContent = breakeven ? breakeven + ' год' : '30+ год';
+    document.getElementById('savingsAmt').textContent    = fmtN(savings30);
+    document.getElementById('savingsAmt').style.color    = savings30>=0?'var(--green)':'var(--red)';
+    document.getElementById('pricePerSqm').textContent   = Math.round(price/size).toLocaleString() + ' лв/м²';
+
+    // TIMELINE CHART
+    const years = Array.from({length:31},(_,i)=>i);
+    const buyLine = years.map(y => {
+      const pv = price * Math.pow(1+growth/100,y);
+      const paid = Math.min(y,term)*12*monthly + downAmt;
+      return Math.round(pv - paid);
+    });
+    const rentLine = years.map(y => {
+      return Math.round(downAmt*(Math.pow(1.04,y)-1) - rent*12*y);
+    });
+
+    if(timelineChart) timelineChart.destroy();
+    const ctx = document.getElementById('timelineChart').getContext('2d');
+    timelineChart = new Chart(ctx,{
+      type:'line',
+      data:{
+        labels: years.map(y=> y===0?'Сега':y+'г'),
+        datasets:[
+          { label:'Купуване', data:buyLine, borderColor:'#2ECC8A', backgroundColor:'rgba(46,204,138,0.06)', tension:0.4, pointRadius:0, pointHoverRadius:5, borderWidth:2, fill:true },
+          { label:'Наем',     data:rentLine, borderColor:'#4C7AC9', backgroundColor:'rgba(76,122,201,0.06)', tension:0.4, pointRadius:0, pointHoverRadius:5, borderWidth:2, fill:true },
+        ]
+      },
+      options:{
+        responsive:true, interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{display:false}, tooltip:{
+          backgroundColor:'rgba(17,17,24,0.95)', borderColor:'rgba(201,168,76,0.2)', borderWidth:1,
+          titleColor:'#F5F0E8', bodyColor:'#D4CCB8', padding:12,
+          callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.y>=0?'+':''}${Math.round(c.parsed.y).toLocaleString()} лв` }
+        }},
+        scales:{
+          x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'rgba(212,204,184,0.4)',font:{size:10}} },
+          y:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'rgba(212,204,184,0.4)',font:{size:10},callback:v=>(v/1000)+'K лв'} }
+        }
+      }
+    });
+  }
+
+  // Initial calculation
+  calculate();
+
+  // CURSOR
+  const cursor=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursor.style.left=mx-5+'px'; cursor.style.top=my-5+'px'; });
+  function animRing(){ rx+=(mx-rx-16)*0.12; ry+=(my-ry-16)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); }
+  animRing();
+  document.querySelectorAll('a,button,input').forEach(el=>{ el.addEventListener('mouseenter',()=>cursor.style.transform='scale(2.5)'); el.addEventListener('mouseleave',()=>cursor.style.transform='scale(1)'); });
+
+  // MOBILE SIDEBAR
+  function toggleSidebar(){
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('burgerBtn').classList.toggle('open');
+    document.getElementById('mobileOverlay').classList.toggle('show');
+  }
+  function closeSidebar(){
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('burgerBtn').classList.remove('open');
+    document.getElementById('mobileOverlay').classList.remove('show');
+  }
+  // Close sidebar on nav click (mobile)
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', closeSidebar));
+
+</script>
+</body>
+</html>
