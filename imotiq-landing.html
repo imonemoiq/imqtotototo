@@ -983,13 +983,94 @@
     document.getElementById('tabRegister').style.color = isLogin ? 'var(--cream-dim)' : 'var(--dark)';
   }
 
-  function handleGoogle() {
-    // Simulate login → redirect to dashboard
-    const btn = event.currentTarget;
-    btn.innerHTML = '<span style="display:flex;align-items:center;gap:8px;justify-content:center">⏳ Влизане...</span>';
-    btn.disabled = true;
-    setTimeout(() => { window.location.href = 'imotiq-dashboard.html'; }, 1200);
+  // ── GOOGLE OAUTH ─────────────────────────────────────────────
+  const GOOGLE_CLIENT_ID = '389128346602-figks224evgni5sivab195e9rarf3d32.apps.googleusercontent.com';
+  const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby2wvhmQgz3WLUq-F0zJRq6Cr6cuipgZIJLAIkSE5tdgN9OqRpmlKALBZNuIawzpKzBVQ/exec';
+
+  // Зареди Google Identity Services
+  function loadGoogleSDK() {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initGoogleAuth;
+    document.head.appendChild(script);
   }
+
+  function initGoogleAuth() {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCallback,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+  }
+
+  function handleGoogle() {
+    const btn = event.currentTarget;
+    btn.innerHTML = '<span style="display:flex;align-items:center;gap:8px;justify-content:center">⏳ Влизане с Google...</span>';
+    btn.disabled = true;
+
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // Ако popup-ът е блокиран — използвай redirect
+        google.accounts.id.renderButton(btn, {
+          theme: 'outline', size: 'large', width: 300
+        });
+        btn.disabled = false;
+        btn.innerHTML = '<img src="https://www.google.com/favicon.ico" style="width:18px"> Продължи с Google';
+      }
+    });
+  }
+
+  async function handleGoogleCallback(response) {
+    try {
+      // Вземи device fingerprint
+      const fingerprint = navigator.userAgent + screen.width + screen.height + navigator.language;
+      const fp = btoa(fingerprint).substring(0, 32);
+
+      // Изпрати токена към Apps Script backend
+      const res = await fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'login',
+          token: response.credential,
+          fingerprint: fp,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem('imotiq_session', data.sessionId);
+        localStorage.setItem('imotiq_user', JSON.stringify(data.user));
+
+        // Покажи welcome съобщение
+        const modal = document.getElementById('authModal');
+        if (modal) modal.innerHTML = `
+          <div style="background:var(--dark-3);border-radius:16px;padding:40px;text-align:center;max-width:400px;margin:auto">
+            <div style="font-size:3rem;margin-bottom:12px">🎉</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:8px">
+              ${data.isNewUser ? 'Добре дошъл!' : 'Добре дошъл обратно!'}
+            </div>
+            <div style="color:var(--cream-dim);margin-bottom:4px">${data.user.name}</div>
+            <div style="font-size:0.8rem;color:var(--gold)">Пренасочване към Dashboard...</div>
+          </div>`;
+
+        setTimeout(() => { window.location.href = 'imotiq-dashboard.html'; }, 1500);
+      } else {
+        alert('Грешка при влизане: ' + (data.error || 'Неизвестна грешка'));
+        location.reload();
+      }
+    } catch(e) {
+      console.error('Login error:', e);
+      alert('Грешка при свързване. Опитай отново.');
+      location.reload();
+    }
+  }
+
+  // Зареди Google SDK при отваряне на страницата
+  loadGoogleSDK();
 
   document.querySelectorAll('.nav-cta, .btn-primary, .plan-cta').forEach(btn => {
     btn.addEventListener('click', e => { e.preventDefault(); openModal(); });

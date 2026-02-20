@@ -184,6 +184,46 @@
   .page-exit{animation:pageOut 0.25s ease forwards !important;}
   @keyframes pageOut{to{opacity:0;transform:translateY(-8px)}}
 </style>
+
+  <!-- ImotIQ Config -->
+  <script>
+    const IMOTIQ_CONFIG = {
+      BACKEND_URL: 'https://script.google.com/macros/s/AKfycby2wvhmQgz3WLUq-F0zJRq6Cr6cuipgZIJLAIkSE5tdgN9OqRpmlKALBZNuIawzpKzBVQ/exec',
+      VERSION: '1.0',
+    };
+
+    // ── API HELPER ──────────────────────────────────────────
+    async function apiCall(action, data = {}) {
+      try {
+        const res = await fetch(IMOTIQ_CONFIG.BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action, ...data }),
+        });
+        return await res.json();
+      } catch(e) {
+        console.error('API error:', e);
+        return { success: false, error: e.message };
+      }
+    }
+
+    // ── SESSION ─────────────────────────────────────────────
+    function getSession() { return localStorage.getItem('imotiq_session'); }
+    function getUser()    { return JSON.parse(localStorage.getItem('imotiq_user') || 'null'); }
+
+    function checkSession() {
+      if(!getSession() && !window.location.href.includes('landing')) {
+        window.location.href = 'imotiq-landing.html';
+      }
+    }
+
+    // ── LOGOUT ──────────────────────────────────────────────
+    async function logout() {
+      await apiCall('logout', { sessionId: getSession() });
+      localStorage.clear();
+      window.location.href = 'imotiq-landing.html';
+    }
+  </script>
+
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
@@ -218,7 +258,7 @@
     <div class="user-row">
       <div class="avatar">ИИ</div>
       <div><div class="user-name">Иван Иванов</div><div class="user-plan">Безплатен план</div></div>
-      <button class="logout-btn">⏻</button>
+      <button class="logout-btn" onclick="logout()">⏻</button>
     </div>
   </div>
 </aside>
