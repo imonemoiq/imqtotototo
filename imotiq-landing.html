@@ -650,6 +650,14 @@
     transition: opacity 0.7s ease, transform 0.7s ease;
   }
   .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── CURSOR FIX ── */
+  *, *::before, *::after { cursor: none !important; }
+  @media (max-width: 900px) {
+    *, *::before, *::after { cursor: auto !important; }
+    .cursor, .cursor-ring { display: none !important; }
+  }
+
 </style>
 </head>
 <body>
@@ -1003,7 +1011,10 @@
       callback: handleGoogleCallback,
       auto_select: false,
       cancel_on_tap_outside: true,
+      prompt_parent_id: null,
     });
+    // Изчисти кешираната сесия в Google (за да показва винаги избор на акаунт)
+    google.accounts.id.disableAutoSelect();
   }
 
   function handleGoogle() {
@@ -1011,14 +1022,30 @@
     btn.innerHTML = '<span style="display:flex;align-items:center;gap:8px;justify-content:center">⏳ Влизане с Google...</span>';
     btn.disabled = true;
 
+    // Покажи Google account picker директно
+    try {
+      google.accounts.oauth2.initCodeClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'email profile openid',
+        ux_mode: 'popup',
+        callback: () => {},
+      });
+    } catch(e) {}
+
+    // Използвай One Tap с принудителен избор на акаунт
     google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Ако popup-ът е блокиран — използвай redirect
-        google.accounts.id.renderButton(btn, {
-          theme: 'outline', size: 'large', width: 300
-        });
+        // Fallback — рендерирай официалния Google бутон
         btn.disabled = false;
-        btn.innerHTML = '<img src="https://www.google.com/favicon.ico" style="width:18px"> Продължи с Google';
+        btn.innerHTML = '';
+        btn.style.padding = '4px';
+        google.accounts.id.renderButton(btn, {
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          locale: 'bg',
+          width: 340,
+        });
       }
     });
   }
@@ -1069,7 +1096,19 @@
     }
   }
 
-  // Зареди Google SDK при отваряне на страницата
+  // ── ИЗЧИСТИ ФАЛШИВА СЕСИЯ ────────────────────────────────
+  const _savedUser = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+  if (_savedUser && _savedUser.email === 'test@example.bg') {
+    localStorage.clear();
+  }
+  // Ако вече има реална сесия — директно към dashboard
+  const _sess = localStorage.getItem('imotiq_session');
+  const _user = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+  if (_sess && _user && _user.id && _user.id !== 'user_001') {
+    window.location.href = 'imotiq-dashboard.html';
+  }
+
+  // Зареди Google SDK
   loadGoogleSDK();
 
   document.querySelectorAll('.nav-cta, .btn-primary, .plan-cta').forEach(btn => {
