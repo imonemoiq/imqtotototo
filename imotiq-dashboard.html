@@ -881,7 +881,7 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">📋 История на анализите</div>
-          <a href="#" class="panel-action">Виж всички</a>
+          <a href="imotiq-history.html" class="panel-action">Виж всички</a>
         </div>
         <table class="history-table">
           <thead>
@@ -892,34 +892,8 @@
               <th>Дата</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>
-                <div class="prop-name">Лозенец, 3-стаен</div>
-                <div style="font-size:0.72rem;color:rgba(212,204,184,0.3)">95 м²</div>
-              </td>
-              <td><span class="score-pill bad">4.2 / 10</span></td>
-              <td>285,000 лв</td>
-              <td>Днес</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="prop-name">Младост 1, 2-стаен</div>
-                <div style="font-size:0.72rem;color:rgba(212,204,184,0.3)">68 м²</div>
-              </td>
-              <td><span class="score-pill good">8.1 / 10</span></td>
-              <td>142,000 лв</td>
-              <td>Вчера</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="prop-name">Витоша, Студио</div>
-                <div style="font-size:0.72rem;color:rgba(212,204,184,0.3)">42 м²</div>
-              </td>
-              <td><span class="score-pill mid">6.5 / 10</span></td>
-              <td>89,000 лв</td>
-              <td>3 дни</td>
-            </tr>
+          <tbody id="historyTableBody">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:rgba(212,204,184,0.3);font-size:0.83rem;">⏳ Зарежда...</td></tr>
           </tbody>
         </table>
       </div>
@@ -928,34 +902,13 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">🔔 Последни Alerts</div>
-          <a href="#" class="panel-action">Управлявай</a>
+          <a href="imotiq-alerts.html" class="panel-action">Управлявай</a>
         </div>
-        <div class="alert-item">
-          <div class="alert-top">
-            <div class="alert-name">Лозенец, до 300K</div>
-            <div class="alert-time">Преди 2ч</div>
-          </div>
-          <div class="alert-desc">Нова обява — 3-стаен, 92м², 12% под средното</div>
-          <span class="alert-tag hot">🔥 Горещо</span>
-        </div>
-        <div class="alert-item">
-          <div class="alert-top">
-            <div class="alert-name">Младост 1, 2-стаен</div>
-            <div class="alert-time">Преди 5ч</div>
-          </div>
-          <div class="alert-desc">Цената намалена с 8,000 лв от вчера</div>
-          <span class="alert-tag drop">📉 Спад в цена</span>
-        </div>
-        <div class="alert-item">
-          <div class="alert-top">
-            <div class="alert-name">Витоша, Студио</div>
-            <div class="alert-time">Вчера</div>
-          </div>
-          <div class="alert-desc">Нова обява в следен квартал, 2% под пазара</div>
-          <span class="alert-tag new">✨ Ново</span>
+        <div id="alertsPanel" style="padding:24px;text-align:center;color:rgba(212,204,184,0.3);font-size:0.83rem;">
+          ⏳ Зарежда...
         </div>
         <div style="padding:14px 20px;text-align:center;">
-          <a href="#" style="font-size:0.78rem;color:var(--gold);text-decoration:none;">+ Добави нов Alert</a>
+          <a href="imotiq-alerts.html" style="font-size:0.78rem;color:var(--gold);text-decoration:none;">+ Добави нов Alert</a>
         </div>
       </div>
     </div>
@@ -994,6 +947,55 @@
   }
 
   document.getElementById('currentDate').textContent = d.toLocaleDateString('bg-BG', {weekday:'long', day:'numeric', month:'long'});
+
+  // ЗАРЕДИ РЕАЛНА ИСТОРИЯ
+  async function loadHistory() {
+    var tbody = document.getElementById('historyTableBody');
+    try {
+      var res = await apiCall('getHistory', { sessionId: getSession(), limit: 5 });
+      if (!res.success || !res.analyses || res.analyses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:rgba(212,204,184,0.3);font-size:0.83rem;">Все още няма анализи. Анализирай първата си обява! 👆</td></tr>';
+        return;
+      }
+      tbody.innerHTML = res.analyses.map(function(a) {
+        var score = parseFloat(a.score) || 0;
+        var scoreClass = score >= 7 ? 'good' : score >= 5 ? 'mid' : 'bad';
+        var date = a.createdAt ? new Date(a.createdAt).toLocaleDateString('bg-BG') : '-';
+        var label = (a.district || '') + (a.propertyType ? ', ' + a.propertyType : '');
+        return '<tr><td><div class="prop-name">' + (label || 'Имот') + '</div>' +
+          '<div style="font-size:0.72rem;color:rgba(212,204,184,0.3)">' + (a.size || '-') + ' кв.м</div></td>' +
+          '<td><span class="score-pill ' + scoreClass + '">' + score.toFixed(1) + ' / 10</span></td>' +
+          '<td>' + (a.listedPrice ? Number(a.listedPrice).toLocaleString('bg') + ' лв' : '-') + '</td>' +
+          '<td>' + date + '</td></tr>';
+      }).join('');
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:rgba(212,204,184,0.3);">Грешка при зареждане</td></tr>';
+    }
+  }
+
+  // ЗАРЕДИ РЕАЛНИ ALERTS
+  async function loadAlerts() {
+    var panel = document.getElementById('alertsPanel');
+    try {
+      var res = await apiCall('getAlerts', { sessionId: getSession() });
+      if (!res.success || !res.alerts || res.alerts.length === 0) {
+        panel.innerHTML = '<div style="color:rgba(212,204,184,0.3);font-size:0.83rem;padding:8px 0;">Нямаш активни alerts.<br><a href=\"imotiq-alerts.html\" style=\"color:var(--gold);text-decoration:none;\">Добави първия си alert →</a></div>';
+        return;
+      }
+      panel.innerHTML = res.alerts.slice(0, 3).map(function(a) {
+        return '<div class="alert-item">' +
+          '<div class="alert-top"><div class="alert-name">' + a.district + ', до ' + Number(a.maxPrice).toLocaleString('bg') + ' лв</div>' +
+          '<div class="alert-time">' + (a.active ? 'Активен' : 'Пауза') + '</div></div>' +
+          '<div class="alert-desc">' + (a.propertyType !== 'all' ? a.propertyType : 'Всички типове') + '</div>' +
+          (a.matchesTotal > 0 ? '<span class="alert-tag hot">🔥 ' + a.matchesTotal + ' нови</span>' : '') +
+          '</div>';
+      }).join('');
+    } catch(e) {
+      panel.innerHTML = '<div style="color:rgba(212,204,184,0.3);font-size:0.83rem;">Грешка при зареждане</div>';
+    }
+  }
+
+  window.addEventListener('load', function() { loadHistory(); loadAlerts(); });
 
   // Analysis simulation
   async function runAnalysis() {
