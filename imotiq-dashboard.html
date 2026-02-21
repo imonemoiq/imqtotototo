@@ -644,7 +644,7 @@
   <!-- ImotIQ Config -->
   <script>
     const IMOTIQ_CONFIG = {
-      BACKEND_URL: 'https://script.google.com/macros/s/AKfycby2wvhmQgz3WLUq-F0zJRq6Cr6cuipgZIJLAIkSE5tdgN9OqRpmlKALBZNuIawzpKzBVQ/exec',
+      BACKEND_URL: 'https://script.google.com/macros/s/AKfycbw3HY8B26PDxKnAICRV-F0WwfFGHyEBmcflC3Pqi26k5Gz1M0uTNKX23ZFO_IAvBKFX4Q/exec',
       VERSION: '1.0',
     };
 
@@ -971,6 +971,33 @@
 <script>
   // Date
   const d = new Date();
+  
+  // Ако идваме от Alerts с URL — попълни автоматично
+  const _preUrl = localStorage.getItem('imotiq_analyze_url');
+  if (_preUrl) {
+    const inp = document.getElementById('urlInput');
+    if (inp) inp.value = _preUrl;
+    localStorage.removeItem('imotiq_analyze_url');
+  }
+
+  
+  // Покажи реалното име на потребителя
+  const _u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+  if (_u && _u.name) {
+    document.querySelectorAll('.user-name').forEach(el => el.textContent = _u.name);
+    document.querySelectorAll('.avatar').forEach(el => {
+      if (_u.avatar) {
+        el.innerHTML = '<img src="' + _u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+      } else {
+        el.textContent = _u.name.charAt(0).toUpperCase();
+      }
+    });
+    document.querySelectorAll('.user-plan').forEach(el => {
+      const plans = {free:'Безплатен план', standard:'Стандарт', pro:'Про', broker:'Брокер'};
+      el.textContent = plans[_u.plan] || 'Безплатен план';
+    });
+  }
+
   document.getElementById('currentDate').textContent = d.toLocaleDateString('bg-BG', {weekday:'long', day:'numeric', month:'long'});
 
   // Analysis simulation

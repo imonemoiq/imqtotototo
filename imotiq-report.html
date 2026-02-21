@@ -241,7 +241,7 @@
   <!-- ImotIQ Config -->
   <script>
     const IMOTIQ_CONFIG = {
-      BACKEND_URL: 'https://script.google.com/macros/s/AKfycby2wvhmQgz3WLUq-F0zJRq6Cr6cuipgZIJLAIkSE5tdgN9OqRpmlKALBZNuIawzpKzBVQ/exec',
+      BACKEND_URL: 'https://script.google.com/macros/s/AKfycbw3HY8B26PDxKnAICRV-F0WwfFGHyEBmcflC3Pqi26k5Gz1M0uTNKX23ZFO_IAvBKFX4Q/exec',
       VERSION: '1.0',
     };
 
@@ -596,6 +596,25 @@
 </main>
 
 <script>
+  
+  // Покажи реалното потребителско име
+  (function() {
+    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+    if (!u || !u.name) return;
+    document.querySelectorAll('.user-name').forEach(function(el) { el.textContent = u.name; });
+    document.querySelectorAll('.avatar').forEach(function(el) {
+      if (u.avatar) {
+        el.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+      } else {
+        el.textContent = u.name.charAt(0).toUpperCase();
+      }
+    });
+    document.querySelectorAll('.user-plan').forEach(function(el) {
+      var plans = {free:'Безплатен план', standard:'Стандарт', pro:'Про', broker:'Брокер'};
+      el.textContent = plans[u.plan] || 'Безплатен план';
+    });
+  })();
+
   document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
 
   const districts = {
