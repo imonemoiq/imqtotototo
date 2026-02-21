@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImotIQ — Admin Config</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0F;
+      color: #D4CCB8;
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #13131A;
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 560px;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: #C9A84C;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: rgba(212,204,184,0.4);
+      margin-bottom: 32px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(212,204,184,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #D4CCB8;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: rgba(201,168,76,0.5); }
+    .current {
+      background: rgba(46,204,138,0.08);
+      border: 1px solid rgba(46,204,138,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.78rem;
+      color: #2ECC8A;
+      word-break: break-all;
+      margin-bottom: 24px;
+    }
+    .current span { color: rgba(212,204,184,0.4); display: block; margin-bottom: 4px; font-size: 0.72rem; }
+    btn-row { display: flex; gap: 12px; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+    .btn-primary { background: #C9A84C; color: #0A0A0F; }
+    .btn-primary:hover { background: #d4b460; }
+    .btn-secondary { background: rgba(255,255,255,0.05); color: #D4CCB8; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+    .status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      display: none;
+    }
+    .status.success { background: rgba(46,204,138,0.1); color: #2ECC8A; border: 1px solid rgba(46,204,138,0.2); }
+    .status.error { background: rgba(232,76,76,0.1); color: #E84C4C; border: 1px solid rgba(232,76,76,0.2); }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 24px 0; }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.83rem;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: rgba(212,204,184,0.4); }
+    .info-val { color: #D4CCB8; font-weight: 500; }
+    .badge { 
+      padding: 3px 10px; 
+      border-radius: 20px; 
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge.ok { background: rgba(46,204,138,0.15); color: #2ECC8A; }
+    .badge.warn { background: rgba(201,168,76,0.15); color: #C9A84C; }
+    .back { 
+      display: inline-block;
+      margin-top: 20px;
+      color: rgba(212,204,184,0.4);
+      font-size: 0.83rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back:hover { color: #C9A84C; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">ImotIQ</div>
+  <div class="subtitle">Admin конфигурация — само за разработчици</div>
+
+  <div class="current">
+    <span>Текущ Backend URL:</span>
+    <span id="currentUrl">Зарежда...</span>
+  </div>
+
+  <label>Нов Apps Script URL</label>
+  <input type="text" id="newUrl" placeholder="https://script.google.com/macros/s/.../exec">
+
+  <button class="btn btn-primary" onclick="saveUrl()">💾 Запази URL</button>
+  <button class="btn btn-secondary" onclick="testUrl()">🔍 Тествай връзката</button>
+  <button class="btn btn-secondary" onclick="resetUrl()">↩ Върни към default</button>
+
+  <div class="status" id="status"></div>
+
+  <hr class="divider">
+
+  <div class="info-row">
+    <span class="info-label">Потребител</span>
+    <span class="info-val" id="infoUser">—</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">План</span>
+    <span class="info-val" id="infoPlan">—</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Сесия</span>
+    <span id="infoSession">—</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Backend статус</span>
+    <span id="infoBackend">—</span>
+  </div>
+
+  <hr class="divider">
+
+  <button class="btn btn-secondary" onclick="clearSession()">🚪 Изчисти сесията</button>
+
+  <a href="imotiq-dashboard.html" class="back">← Обратно към Dashboard</a>
+</div>
+
+<script>
+  const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
+
+  function getBackendUrl() {
+    return localStorage.getItem('imotiq_backend_url') || DEFAULT_URL;
+  }
+
+  function showStatus(msg, type) {
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status ' + type;
+    el.style.display = 'block';
+    setTimeout(function() { el.style.display = 'none'; }, 4000);
+  }
+
+  function saveUrl() {
+    var url = document.getElementById('newUrl').value.trim();
+    if (!url || !url.includes('script.google.com')) {
+      showStatus('⚠ Невалиден URL — трябва да е от script.google.com', 'error');
+      return;
+    }
+    if (!url.endsWith('/exec')) {
+      url = url + (url.endsWith('/') ? 'exec' : '/exec');
+    }
+    localStorage.setItem('imotiq_backend_url', url);
+    document.getElementById('currentUrl').textContent = url;
+    document.getElementById('newUrl').value = '';
+    showStatus('✅ URL запазен успешно! Всички страниции вече го използват.', 'success');
+  }
+
+  function resetUrl() {
+    localStorage.removeItem('imotiq_backend_url');
+    document.getElementById('currentUrl').textContent = DEFAULT_URL;
+    showStatus('↩ Върнат към default URL', 'success');
+  }
+
+  async function testUrl() {
+    var url = getBackendUrl();
+    document.getElementById('infoBackend').innerHTML = '<span class="badge warn">Тества...</span>';
+    try {
+      var res = await fetch(url);
+      var data = await res.json();
+      if (data.status === 'ok') {
+        document.getElementById('infoBackend').innerHTML = '<span class="badge ok">✅ Работи</span>';
+        showStatus('✅ Backend отговаря нормално!', 'success');
+      } else {
+        document.getElementById('infoBackend').innerHTML = '<span class="badge warn">⚠ Грешен отговор</span>';
+      }
+    } catch(e) {
+      document.getElementById('infoBackend').innerHTML = '<span class="badge warn">❌ Не отговаря</span>';
+      showStatus('❌ Backend не отговаря: ' + e.message, 'error');
+    }
+  }
+
+  function clearSession() {
+    if (confirm('Изчисти сесията и се върни към landing?')) {
+      var backendUrl = localStorage.getItem('imotiq_backend_url');
+      localStorage.clear();
+      if (backendUrl) localStorage.setItem('imotiq_backend_url', backendUrl);
+      window.location.href = 'imotiq-landing.html';
+    }
+  }
+
+  // Зареди текуща информация
+  function init() {
+    document.getElementById('currentUrl').textContent = getBackendUrl();
+
+    var user = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+    if (user) {
+      document.getElementById('infoUser').textContent = user.name + ' (' + user.email + ')';
+      var plans = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
+      document.getElementById('infoPlan').innerHTML = '<span class="badge ok">' + (plans[user.plan] || user.plan) + '</span>';
+    }
+
+    var sess = localStorage.getItem('imotiq_session');
+    document.getElementById('infoSession').innerHTML = sess
+      ? '<span class="badge ok">Активна</span>'
+      : '<span class="badge warn">Няма</span>';
+
+    testUrl();
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -664,6 +664,38 @@
   .cursor, .cursor-ring { display: none !important; }
   a, button, [onclick], select, input, label { cursor: pointer !important; }
 </style>
+
+  <!-- ImotIQ Dynamic Backend URL -->
+  <script>
+    var IMOTIQ_DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
+    var IMOTIQ_BACKEND = localStorage.getItem('imotiq_backend_url') || IMOTIQ_DEFAULT_URL;
+
+    async function apiCall(action, data) {
+      data = data || {};
+      try {
+        var res = await fetch(IMOTIQ_BACKEND, {
+          method: 'POST',
+          body: JSON.stringify(Object.assign({action: action}, data)),
+        });
+        return await res.json();
+      } catch(e) {
+        console.error('API error:', e);
+        return {success: false, error: e.message};
+      }
+    }
+
+    function getSession() { return localStorage.getItem('imotiq_session'); }
+    function getUser() { return JSON.parse(localStorage.getItem('imotiq_user') || 'null'); }
+
+    async function logout() {
+      await apiCall('logout', {sessionId: getSession()});
+      var backendUrl = localStorage.getItem('imotiq_backend_url');
+      localStorage.clear();
+      if (backendUrl) localStorage.setItem('imotiq_backend_url', backendUrl);
+      window.location.href = 'imotiq-landing.html';
+    }
+  </script>
+
 </head>
 <body>
 
@@ -998,7 +1030,7 @@
 
   // ── GOOGLE OAUTH ─────────────────────────────────────────────
   const GOOGLE_CLIENT_ID = '389128346602-figks224evgni5sivab195e9rarf3d32.apps.googleusercontent.com';
-  const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxaa1Fi1DmGFNlb4hNMJqFeXo53nqftjIRzNLdgFo8TPgKp9qIRzV0NXOyNVnKllFtPjg/exec';
+  const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
 
   // Зареди Google Identity Services
   function loadGoogleSDK() {
