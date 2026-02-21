@@ -219,7 +219,7 @@
   <!-- ImotIQ Config -->
   <script>
     const IMOTIQ_CONFIG = {
-      BACKEND_URL: 'https://script.google.com/macros/s/AKfycbw3HY8B26PDxKnAICRV-F0WwfFGHyEBmcflC3Pqi26k5Gz1M0uTNKX23ZFO_IAvBKFX4Q/exec',
+      BACKEND_URL: 'https://script.google.com/macros/s/AKfycbwZMP-d3ZLxuVx55YdTaXg0VGjqJtQAEUs-eKVDgEKTkJBNr8JfCXBXulFtN9F26_KlqA/exec',
       VERSION: '1.0',
     };
 
@@ -563,6 +563,150 @@
     });
   });
 
+
+  // ── РЕАЛЕН BACKEND ЗА ALERTS ─────────────────────────────────────
+  const BACKEND = 'https://script.google.com/macros/s/AKfycbwZMP-d3ZLxuVx55YdTaXg0VGjqJtQAEUs-eKVDgEKTkJBNr8JfCXBXulFtN9F26_KlqA/exec';
+
+  async function api(action, data) {
+    try {
+      const res = await fetch(BACKEND, {
+        method: 'POST',
+        body: JSON.stringify({ action, sessionId: localStorage.getItem('imotiq_session'), ...data }),
+      });
+      return await res.json();
+    } catch(e) { return { success: false, error: e.message }; }
+  }
+
+  // Зареди alerts от backend при зареждане на страницата
+  async function loadAlerts() {
+    const listEl = document.getElementById('alertsList');
+    if (!listEl) return;
+
+    const result = await api('getAlerts');
+    if (!result.success || !result.alerts || result.alerts.length === 0) {
+      // Нямаме реални alerts — покажи empty state
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔔</div>
+          <div class="empty-text">Нямаш настроени alerts.<br>Добави своя първи alert по-горе!</div>
+        </div>`;
+      // Обнови статистиките
+      document.querySelectorAll('.sb-val')[0].textContent = '0';
+      document.querySelectorAll('.sb-val')[1].textContent = '0';
+      return;
+    }
+
+    // Рендерирай реалните alerts
+    listEl.innerHTML = result.alerts.map(a => `
+      <div class="alert-card ${a.matchesTotal > 0 ? 'has-new' : ''} fade-in" data-id="${a.id}">
+        <div class="alert-main">
+          <div class="alert-icon-wrap ${a.active ? 'active' : 'paused'}">
+            ${getDistrictEmoji(a.district)}
+          </div>
+          <div class="alert-info">
+            <div class="alert-name-row">
+              <div class="alert-name">${a.district} — до ${Number(a.maxPrice).toLocaleString('bg')} лв</div>
+              ${a.matchesTotal > 0 ? `<span class="alert-new-badge">${a.matchesTotal} НОВИ</span>` : ''}
+            </div>
+            <div class="alert-criteria">
+              ${a.propertyType !== 'all' ? a.propertyType : 'Всички типове'} · 
+              ${a.district} · 
+              Макс ${Number(a.maxPrice).toLocaleString('bg')} лв
+              ${a.minSize > 0 ? ' · Мин ' + a.minSize + ' м²' : ''}
+            </div>
+          </div>
+          <div class="alert-stats">
+            <div class="alert-stat">
+              <div class="alert-stat-val" style="color:${a.matchesTotal > 0 ? 'var(--gold)' : 'rgba(212,204,184,0.3)'}">${a.matchesTotal || 0}</div>
+              <div class="alert-stat-label">Нови</div>
+            </div>
+          </div>
+          <div class="alert-actions">
+            <button class="alert-btn" title="${a.active ? 'Пауза' : 'Активирай'}" onclick="toggleAlert('${a.id}', ${a.active})">
+              ${a.active ? '⏸' : '▶'}
+            </button>
+            <button class="alert-btn danger" title="Изтрий" onclick="deleteAlertReal('${a.id}', this)">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Обнови статистики
+    document.querySelectorAll('.sb-val')[0].textContent = result.alerts.filter(a => a.active).length;
+    document.querySelectorAll('.sb-val')[1].textContent = result.alerts.reduce((s,a) => s + (a.matchesTotal||0), 0);
+  }
+
+  function getDistrictEmoji(district) {
+    const map = {'Лозенец':'🏙️','Младост':'🏢','Витоша':'🌿','Симеоново':'🌲','Бояна':'🏡','Надежда':'🏘️','Люлин':'🏗️','Студентски':'🎓'};
+    return map[district] || '📍';
+  }
+
+  // Добави нов alert
+  async function addAlert() {
+    const btn = document.querySelector('.add-btn');
+    const district = document.querySelector('.form-select').value.replace(/^[^ ]+ /, '');
+    const maxPrice = parseInt(document.querySelectorAll('.form-input')[0]?.value?.replace(/\D/g,'') || '0');
+    const propType = document.querySelectorAll('.form-select')[1]?.value?.replace(/^[^ ]+ /, '') || 'all';
+
+    if (!maxPrice || maxPrice < 10000) {
+      document.querySelector('.form-input').style.borderColor = 'var(--red)';
+      setTimeout(() => document.querySelector('.form-input').style.borderColor = '', 2000);
+      return;
+    }
+
+    btn.textContent = '⏳ Запазва...';
+    btn.disabled = true;
+
+    const result = await api('saveAlert', {
+      alert: { district, maxPrice, minPrice: 0, propertyType: propType, minSize: 0, maxSize: 0 }
+    });
+
+    if (result.success) {
+      btn.textContent = '✓ Добавен!';
+      btn.style.background = 'var(--green)';
+      setTimeout(() => {
+        btn.textContent = '+ Добави';
+        btn.style.background = '';
+        btn.disabled = false;
+        loadAlerts(); // Презареди
+      }, 1500);
+    } else {
+      btn.textContent = result.message || 'Грешка!';
+      btn.style.background = 'var(--red)';
+      setTimeout(() => { btn.textContent = '+ Добави'; btn.style.background = ''; btn.disabled = false; }, 3000);
+    }
+  }
+
+  // Изтрий alert
+  async function deleteAlertReal(alertId, btn) {
+    const card = btn.closest('.alert-card');
+    card.style.opacity = '0.5';
+
+    const result = await api('deleteAlert', { alertId });
+    if (result.success) {
+      card.style.transition = 'all 0.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(20px)';
+      setTimeout(() => { card.remove(); loadAlerts(); }, 300);
+    } else {
+      card.style.opacity = '1';
+      alert('Грешка при изтриване');
+    }
+  }
+
+  // Пауза/Активиране
+  async function toggleAlert(alertId, currentActive) {
+    // За момента само UI — backend toggle идва в следваща версия
+    const card = document.querySelector(`[data-id="${alertId}"]`);
+    if (card) {
+      const icon = card.querySelector('.alert-icon-wrap');
+      if (icon) icon.className = `alert-icon-wrap ${currentActive ? 'paused' : 'active'}`;
+    }
+  }
+
+  // Зареди при старт
+  window.addEventListener('load', loadAlerts);
+
   // CURSOR
   const cursor=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
   let mx=0,my=0,rx=0,ry=0;
@@ -579,6 +723,150 @@
     }
     window.location.href = 'imotiq-dashboard.html';
   }
+
+
+  // ── РЕАЛЕН BACKEND ЗА ALERTS ─────────────────────────────────────
+  const BACKEND = 'https://script.google.com/macros/s/AKfycbwZMP-d3ZLxuVx55YdTaXg0VGjqJtQAEUs-eKVDgEKTkJBNr8JfCXBXulFtN9F26_KlqA/exec';
+
+  async function api(action, data) {
+    try {
+      const res = await fetch(BACKEND, {
+        method: 'POST',
+        body: JSON.stringify({ action, sessionId: localStorage.getItem('imotiq_session'), ...data }),
+      });
+      return await res.json();
+    } catch(e) { return { success: false, error: e.message }; }
+  }
+
+  // Зареди alerts от backend при зареждане на страницата
+  async function loadAlerts() {
+    const listEl = document.getElementById('alertsList');
+    if (!listEl) return;
+
+    const result = await api('getAlerts');
+    if (!result.success || !result.alerts || result.alerts.length === 0) {
+      // Нямаме реални alerts — покажи empty state
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔔</div>
+          <div class="empty-text">Нямаш настроени alerts.<br>Добави своя първи alert по-горе!</div>
+        </div>`;
+      // Обнови статистиките
+      document.querySelectorAll('.sb-val')[0].textContent = '0';
+      document.querySelectorAll('.sb-val')[1].textContent = '0';
+      return;
+    }
+
+    // Рендерирай реалните alerts
+    listEl.innerHTML = result.alerts.map(a => `
+      <div class="alert-card ${a.matchesTotal > 0 ? 'has-new' : ''} fade-in" data-id="${a.id}">
+        <div class="alert-main">
+          <div class="alert-icon-wrap ${a.active ? 'active' : 'paused'}">
+            ${getDistrictEmoji(a.district)}
+          </div>
+          <div class="alert-info">
+            <div class="alert-name-row">
+              <div class="alert-name">${a.district} — до ${Number(a.maxPrice).toLocaleString('bg')} лв</div>
+              ${a.matchesTotal > 0 ? `<span class="alert-new-badge">${a.matchesTotal} НОВИ</span>` : ''}
+            </div>
+            <div class="alert-criteria">
+              ${a.propertyType !== 'all' ? a.propertyType : 'Всички типове'} · 
+              ${a.district} · 
+              Макс ${Number(a.maxPrice).toLocaleString('bg')} лв
+              ${a.minSize > 0 ? ' · Мин ' + a.minSize + ' м²' : ''}
+            </div>
+          </div>
+          <div class="alert-stats">
+            <div class="alert-stat">
+              <div class="alert-stat-val" style="color:${a.matchesTotal > 0 ? 'var(--gold)' : 'rgba(212,204,184,0.3)'}">${a.matchesTotal || 0}</div>
+              <div class="alert-stat-label">Нови</div>
+            </div>
+          </div>
+          <div class="alert-actions">
+            <button class="alert-btn" title="${a.active ? 'Пауза' : 'Активирай'}" onclick="toggleAlert('${a.id}', ${a.active})">
+              ${a.active ? '⏸' : '▶'}
+            </button>
+            <button class="alert-btn danger" title="Изтрий" onclick="deleteAlertReal('${a.id}', this)">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Обнови статистики
+    document.querySelectorAll('.sb-val')[0].textContent = result.alerts.filter(a => a.active).length;
+    document.querySelectorAll('.sb-val')[1].textContent = result.alerts.reduce((s,a) => s + (a.matchesTotal||0), 0);
+  }
+
+  function getDistrictEmoji(district) {
+    const map = {'Лозенец':'🏙️','Младост':'🏢','Витоша':'🌿','Симеоново':'🌲','Бояна':'🏡','Надежда':'🏘️','Люлин':'🏗️','Студентски':'🎓'};
+    return map[district] || '📍';
+  }
+
+  // Добави нов alert
+  async function addAlert() {
+    const btn = document.querySelector('.add-btn');
+    const district = document.querySelector('.form-select').value.replace(/^[^ ]+ /, '');
+    const maxPrice = parseInt(document.querySelectorAll('.form-input')[0]?.value?.replace(/\D/g,'') || '0');
+    const propType = document.querySelectorAll('.form-select')[1]?.value?.replace(/^[^ ]+ /, '') || 'all';
+
+    if (!maxPrice || maxPrice < 10000) {
+      document.querySelector('.form-input').style.borderColor = 'var(--red)';
+      setTimeout(() => document.querySelector('.form-input').style.borderColor = '', 2000);
+      return;
+    }
+
+    btn.textContent = '⏳ Запазва...';
+    btn.disabled = true;
+
+    const result = await api('saveAlert', {
+      alert: { district, maxPrice, minPrice: 0, propertyType: propType, minSize: 0, maxSize: 0 }
+    });
+
+    if (result.success) {
+      btn.textContent = '✓ Добавен!';
+      btn.style.background = 'var(--green)';
+      setTimeout(() => {
+        btn.textContent = '+ Добави';
+        btn.style.background = '';
+        btn.disabled = false;
+        loadAlerts(); // Презареди
+      }, 1500);
+    } else {
+      btn.textContent = result.message || 'Грешка!';
+      btn.style.background = 'var(--red)';
+      setTimeout(() => { btn.textContent = '+ Добави'; btn.style.background = ''; btn.disabled = false; }, 3000);
+    }
+  }
+
+  // Изтрий alert
+  async function deleteAlertReal(alertId, btn) {
+    const card = btn.closest('.alert-card');
+    card.style.opacity = '0.5';
+
+    const result = await api('deleteAlert', { alertId });
+    if (result.success) {
+      card.style.transition = 'all 0.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(20px)';
+      setTimeout(() => { card.remove(); loadAlerts(); }, 300);
+    } else {
+      card.style.opacity = '1';
+      alert('Грешка при изтриване');
+    }
+  }
+
+  // Пауза/Активиране
+  async function toggleAlert(alertId, currentActive) {
+    // За момента само UI — backend toggle идва в следваща версия
+    const card = document.querySelector(`[data-id="${alertId}"]`);
+    if (card) {
+      const icon = card.querySelector('.alert-icon-wrap');
+      if (icon) icon.className = `alert-icon-wrap ${currentActive ? 'paused' : 'active'}`;
+    }
+  }
+
+  // Зареди при старт
+  window.addEventListener('load', loadAlerts);
 
   // MOBILE SIDEBAR
   function toggleSidebar(){
