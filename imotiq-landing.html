@@ -28,7 +28,7 @@
     color: var(--cream);
     font-family: 'DM Sans', sans-serif;
     overflow-x: hidden;
-    cursor: none;
+    cursor: auto;
   }
 
   /* Custom cursor */
@@ -180,7 +180,7 @@
     font-weight: 700;
     font-size: 0.9rem;
     letter-spacing: 0.05em;
-    cursor: none;
+    cursor: auto;
     transition: all 0.2s;
     text-decoration: none;
     display: inline-block;
@@ -535,7 +535,7 @@
     font-family: 'Syne', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
-    cursor: none;
+    cursor: auto;
     border-radius: 0 2px 2px 0;
     transition: background 0.2s;
     white-space: nowrap;
@@ -652,12 +652,17 @@
   .reveal.visible { opacity: 1; transform: translateY(0); }
 
   /* ── CURSOR FIX ── */
-  *, *::before, *::after { cursor: none !important; }
+  *, *::before, *::after { cursor: auto !important; }
   @media (max-width: 900px) {
     *, *::before, *::after { cursor: auto !important; }
     .cursor, .cursor-ring { display: none !important; }
   }
 
+
+  /* ── CURSOR OVERRIDE ── */
+  *, *::before, *::after { cursor: auto !important; }
+  .cursor, .cursor-ring { display: none !important; }
+  a, button, [onclick], select, input, label { cursor: pointer !important; }
 </style>
 </head>
 <body>

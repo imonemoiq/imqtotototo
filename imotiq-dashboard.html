@@ -32,7 +32,7 @@
     font-family: 'DM Sans', sans-serif;
     display: flex;
     min-height: 100vh;
-    cursor: none;
+    cursor: auto;
   }
 
   /* CURSOR */
@@ -76,7 +76,7 @@
     padding: 10px 16px;
     margin: 2px 8px;
     border-radius: 8px;
-    cursor: none;
+    cursor: auto;
     transition: all 0.2s;
     color: var(--cream-dim);
     font-size: 0.88rem;
@@ -138,7 +138,7 @@
     font-size: 0.72rem;
     text-decoration: none;
     margin-top: 10px;
-    cursor: none;
+    cursor: auto;
     transition: background 0.2s;
   }
   .upgrade-btn:hover { background: var(--gold-light); }
@@ -147,7 +147,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    cursor: none;
+    cursor: auto;
   }
   .avatar {
     width: 34px; height: 34px;
@@ -167,7 +167,7 @@
     background: none;
     border: none;
     color: rgba(212,204,184,0.3);
-    cursor: none;
+    cursor: auto;
     font-size: 0.8rem;
     transition: color 0.2s;
   }
@@ -203,7 +203,7 @@
     border: 1px solid rgba(255,255,255,0.06);
     border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    cursor: none;
+    cursor: auto;
     font-size: 1rem;
     position: relative;
     transition: border-color 0.2s;
@@ -299,7 +299,7 @@
     font-family: 'Syne', sans-serif;
     font-weight: 700;
     font-size: 0.88rem;
-    cursor: none;
+    cursor: auto;
     border-radius: 0 8px 8px 0;
     transition: all 0.2s;
     white-space: nowrap;
@@ -417,7 +417,7 @@
     background: none;
     color: var(--cream-dim);
     font-size: 0.78rem;
-    cursor: none;
+    cursor: auto;
     transition: all 0.2s;
     font-family: 'DM Sans', sans-serif;
   }
@@ -467,7 +467,7 @@
     justify-content: space-between;
   }
   .panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; }
-  .panel-action { font-size: 0.74rem; color: var(--gold); cursor: none; text-decoration: none; }
+  .panel-action { font-size: 0.74rem; color: var(--gold); cursor: auto; text-decoration: none; }
 
   /* HISTORY TABLE */
   .history-table { width: 100%; border-collapse: collapse; }
@@ -506,7 +506,7 @@
   .alert-item {
     padding: 14px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.04);
-    cursor: none;
+    cursor: auto;
     transition: background 0.2s;
   }
   .alert-item:last-child { border-bottom: none; }
@@ -564,7 +564,7 @@
 
   /* ── MOBILE RESPONSIVE ── */
   .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:49;backdrop-filter:blur(4px);}
-  .burger{display:none;flex-direction:column;gap:5px;cursor:none;padding:8px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;}
+  .burger{display:none;flex-direction:column;gap:5px;cursor:auto;padding:8px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;}
   .burger span{display:block;width:20px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
   .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
   .burger.open span:nth-child(2){opacity:0;}
@@ -610,8 +610,8 @@
   @keyframes pageOut{to{opacity:0;transform:translateY(-8px)}}
 
   /* ── CURSOR FIX ── */
-  *, *::before, *::after { cursor: none !important; }
-  .cursor { cursor: none !important; }
+  *, *::before, *::after { cursor: auto !important; }
+  .cursor { cursor: auto !important; }
   @media (max-width: 900px) {
     *, *::before, *::after { cursor: auto !important; }
     .cursor, .cursor-ring { display: none !important; }
@@ -634,6 +634,11 @@
     border-top: 1px solid rgba(255,255,255,0.05) !important;
   }
 
+
+  /* ── CURSOR OVERRIDE ── */
+  *, *::before, *::after { cursor: auto !important; }
+  .cursor, .cursor-ring { display: none !important; }
+  a, button, [onclick], select, input, label { cursor: pointer !important; }
 </style>
 
   <!-- ImotIQ Config -->
@@ -678,6 +683,18 @@
 </head>
 <body>
 
+<script>
+    // ── ПРОВЕРКА НА СЕСИЯ ──────────────────────────────────────
+    (function() {
+      var sess = localStorage.getItem('imotiq_session');
+      var user = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+      // Ако няма сесия или е фалшивата тестова — върни към landing
+      if (!sess || !user || user.email === 'test@example.bg' || user.id === 'user_001') {
+        localStorage.clear();
+        window.location.replace('imotiq-landing.html');
+      }
+    })();
+</script>
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
 
