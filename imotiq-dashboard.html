@@ -673,7 +673,120 @@
       if (backendUrl) localStorage.setItem('imotiq_backend_url', backendUrl);
       window.location.href = 'imotiq-landing.html';
     }
-  </script>
+  
+  // ЗАРЕДИ РЕАЛНИ СТАТИСТИКИ
+  async function loadStats() {
+    var u = getUser();
+    if (!u) return;
+
+    var plans = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
+    var limits = {free:1, standard:10, pro:50, broker:200};
+    var plan = u.plan || 'free';
+    var used = u.analyses_this_month || 0;
+    var max = limits[plan] || 1;
+
+    // Анализи
+    document.getElementById('statAnalyses').textContent = used;
+    document.getElementById('statAnalysesSub').textContent = 'от ' + max + ' за месеца';
+    var remaining = max - used;
+    var trendEl = document.getElementById('statAnalysesTrend');
+    if (remaining <= 0) {
+      trendEl.textContent = '↓ Лимитът е достигнат';
+      trendEl.className = 'stat-trend down';
+    } else {
+      trendEl.textContent = '↑ Остават ' + remaining;
+      trendEl.className = 'stat-trend up';
+    }
+
+    // План
+    document.getElementById('statPlan').textContent = plans[plan] || plan;
+    document.getElementById('statPlanSub').textContent = u.email || '';
+    var planTrend = document.getElementById('statPlanTrend');
+    if (plan === 'free') {
+      planTrend.innerHTML = '<a href="imotiq-settings.html" style="color:var(--gold);font-size:0.78rem;text-decoration:none;">↑ Надгради →</a>';
+    } else {
+      planTrend.textContent = '✓ Активен';
+      planTrend.className = 'stat-trend up';
+    }
+
+    // Зареди последен анализ
+    var res = await apiCall('getHistory', { sessionId: getSession(), limit: 1 });
+    if (res.success && res.analyses && res.analyses.length > 0) {
+      var last = res.analyses[0];
+      document.getElementById('statLastScore').textContent = parseFloat(last.score || 0).toFixed(1) + '/10';
+      document.getElementById('statLastDistrict').textContent = last.district || 'последен анализ';
+      document.getElementById('statLastTrend').textContent = last.verdict || '';
+      document.getElementById('statLastTrend').className = 'stat-trend';
+    }
+
+    // Alerts count
+    var ares = await apiCall('getAlerts', { sessionId: getSession() });
+    if (ares.success && ares.alerts) {
+      var active = ares.alerts.filter(function(a) { return a.active; }).length;
+      document.getElementById('statAlerts').textContent = active;
+      document.getElementById('statAlertsSub').textContent = 'активни по твои критерии';
+      document.getElementById('statAlertsTrend').textContent = ares.alerts.length > 0 ? '✦ ' + ares.alerts.length + ' общо' : '';
+    }
+  }
+
+  // СПОДЕЛИ
+  function shareResult() {
+    var url = document.getElementById('urlInput').value;
+    if (navigator.share) {
+      navigator.share({ title: 'ImotIQ Анализ', text: 'Провери тази имотна обява с AI анализ', url: url });
+    } else {
+      navigator.clipboard.writeText(url).then(function() {
+        alert('URL копиран в клипборда!');
+      });
+    }
+  }
+
+  // ЗАПАЗИ (вече се пази автоматично при анализ — показваме съобщение)
+  function saveToHistory() {
+    alert('Анализът е автоматично запазен в История!');
+  }
+
+  // PDF
+  function downloadPDF() {
+    var prop = document.getElementById('resProperty').textContent;
+    var score = document.getElementById('resScore').textContent;
+    var price = document.getElementById('resListedPrice').textContent;
+    var fair = document.getElementById('resFairPrice').textContent;
+    var verdict = document.getElementById('resVerdict').textContent;
+    var insights = [];
+    document.querySelectorAll('#resInsights .insight-text').forEach(function(el) {
+      insights.push(el.textContent);
+    });
+
+    var content = prop + '\n' +
+      'Оценка: ' + score + '/10\n' +
+      'Обявена цена: ' + price + '\n' +
+      'Справедлива цена: ' + fair + '\n' +
+      'Присъда: ' + verdict + '\n\n' +
+      'АНАЛИЗ:\n' + insights.join('\n') + '\n\n' +
+      'Генерирано от ImotIQ — ' + new Date().toLocaleDateString('bg-BG');
+
+    var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ImotIQ-Анализ.txt';
+    a.click();
+  }
+
+  // FIX INSIGHTS ICONS
+  function fixInsightIcons(insights) {
+    var iconMap = { warn: '⚠️', ok: '✅', info: '📈', neutral: '💡', good: '✅', bad: '⚠️' };
+    return (insights || []).map(function(ins) {
+      var type = ins.type || 'neutral';
+      var icon = iconMap[type] || '💡';
+      return '<div class="insight-row ' + type + '">' +
+        '<span class="insight-icon">' + icon + '</span>' +
+        '<div class="insight-text">' + ins.text + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+</script>
 
 </head>
 <body>
@@ -754,27 +867,27 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-card-label">Анализи направени</div>
-        <div class="stat-card-value">1</div>
-        <div class="stat-card-sub">от 1 безплатни</div>
-        <div class="stat-trend down">↓ Лимитът е достигнат</div>
+        <div class="stat-card-value" id="statAnalyses">—</div>
+        <div class="stat-card-sub" id="statAnalysesSub">зарежда...</div>
+        <div class="stat-trend" id="statAnalysesTrend"></div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">Средна цена Лозенец</div>
-        <div class="stat-card-value" style="color:var(--gold)">3,240</div>
-        <div class="stat-card-sub">лв/м² тази седмица</div>
-        <div class="stat-trend up">↑ +2.1% от миналия месец</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Нови обяви днес</div>
-        <div class="stat-card-value">47</div>
-        <div class="stat-card-sub">в следени квартали</div>
-        <div class="stat-trend up">↑ 3 под пазарна цена</div>
+        <div class="stat-card-label">Последен анализ</div>
+        <div class="stat-card-value" id="statLastScore" style="color:var(--gold)">—</div>
+        <div class="stat-card-sub" id="statLastDistrict">все още няма</div>
+        <div class="stat-trend" id="statLastTrend"></div>
       </div>
       <div class="stat-card">
         <div class="stat-card-label">Активни Alerts</div>
-        <div class="stat-card-value">3</div>
-        <div class="stat-card-sub">по твои критерии</div>
-        <div class="stat-trend up" style="color:var(--gold)">✦ 1 нов от вчера</div>
+        <div class="stat-card-value" id="statAlerts">—</div>
+        <div class="stat-card-sub" id="statAlertsSub">зарежда...</div>
+        <div class="stat-trend" id="statAlertsTrend"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Твоят план</div>
+        <div class="stat-card-value" id="statPlan" style="color:var(--gold)">—</div>
+        <div class="stat-card-sub" id="statPlanSub"></div>
+        <div class="stat-trend" id="statPlanTrend"></div>
       </div>
     </div>
 
@@ -843,9 +956,9 @@
           <span id="resVerdict">—</span>
         </div>
         <div class="result-actions">
-          <button class="action-btn">📥 Запази</button>
-          <button class="action-btn">📤 Сподели</button>
-          <button class="action-btn primary">📄 PDF Репорт</button>
+          <button class="action-btn" onclick="saveToHistory()">📥 Запази</button>
+          <button class="action-btn" onclick="shareResult()">📤 Сподели</button>
+          <button class="action-btn primary" onclick="downloadPDF()">📄 PDF Репорт</button>
         </div>
       </div>
     </div>
@@ -970,7 +1083,7 @@
     }
   }
 
-  window.addEventListener('load', function() { loadHistory(); loadAlerts(); });
+  window.addEventListener('load', function() { loadHistory(); loadAlerts(); loadStats(); });
 
   // Analysis simulation
   async function runAnalysis() {
@@ -1061,13 +1174,7 @@
         insights.push({ type: 'neutral', text: '💡 Препоръка: ' + a.recommendation });
       }
 
-      document.getElementById('resInsights').innerHTML = insights.map(function(ins) {
-        var icon = iconMap[ins.type] || '💡';
-        return '<div class="insight-row ' + ins.type + '">' +
-          '<span class="insight-icon">' + icon + '</span>' +
-          '<div class="insight-text">' + ins.text + '</div>' +
-          '</div>';
-      }).join('');
+      document.getElementById('resInsights').innerHTML = fixInsightIcons(insights);
 
       // Verdict
       document.getElementById('resVerdict').textContent = a.verdict || '';
