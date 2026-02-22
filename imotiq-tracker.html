@@ -312,15 +312,15 @@
     <a class="nav-item" href="imotiq-settings.html"><span class="nav-icon">⚙️</span> Настройки</a>
   </div>
   <div class="sidebar-bottom">
-    <div class="plan-widget">
-      <div class="plan-name">🆓 Безплатен план</div>
-      <div class="plan-usage">1 от 1 анализа използван</div>
-      <div class="usage-bar"><div class="usage-fill" style="width:100%"></div></div>
-      <a href="#" class="upgrade-btn">Надгради към Стандарт →</a>
+    <div class="plan-widget" id="planWidget">
+      <div class="plan-name" id="planName">⏳ Зарежда...</div>
+      <div class="plan-usage" id="planUsage"></div>
+      <div class="usage-bar"><div class="usage-fill" id="usageFill" style="width:0%"></div></div>
+      <a href="imotiq-settings.html" class="upgrade-btn" id="upgradeBtn" style="display:none">Надгради →</a>
     </div>
     <div class="user-row">
-      <div class="avatar">ИИ</div>
-      <div><div class="user-name">Иван Иванов</div><div class="user-plan">Безплатен план</div></div>
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div><div class="user-name" id="sidebarName">...</div><div class="user-plan" id="sidebarPlan">...</div></div>
       <button class="logout-btn" onclick="logout()">⏻</button>
     </div>
   </div>
@@ -472,27 +472,85 @@
 </main>
 
 <script>
-  // Date
-  
-  // Покажи реалното потребителско име
-  (function() {
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
+
+  // Зареди реалния потребител в sidebar
+  function loadUserSidebar() {
     var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
-    if (!u || !u.name) return;
-    document.querySelectorAll('.user-name').forEach(function(el) { el.textContent = u.name; });
-    document.querySelectorAll('.avatar').forEach(function(el) {
-      if (u.avatar) {
-        el.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
-      } else {
-        el.textContent = u.name.charAt(0).toUpperCase();
+    if (!u) return;
+    var planNames = {free:'Безплатен план', standard:'Стандарт', pro:'Про план', broker:'Брокер план'};
+    var planIcons = {free:'🆓', standard:'⭐', pro:'🚀', broker:'🏢'};
+    var planLimits = {free:1, standard:10, pro:50, broker:200};
+    var plan = u.plan || 'free';
+    var used = u.analysesThisMonth || 0;
+    var max = planLimits[plan] || 1;
+    var pct = Math.min(Math.round(used / max * 100), 100);
+
+    var avatarEl = document.getElementById('sidebarAvatar');
+    if (u.avatar) {
+      avatarEl.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+    } else {
+      avatarEl.textContent = (u.name || '?').charAt(0).toUpperCase();
+    }
+    document.getElementById('sidebarName').textContent = u.name || u.email;
+    document.getElementById('sidebarPlan').textContent = planNames[plan] || plan;
+    document.getElementById('planName').textContent = planIcons[plan] + ' ' + (planNames[plan] || plan);
+    document.getElementById('planUsage').textContent = used + ' от ' + max + ' анализа използвани';
+    document.getElementById('usageFill').style.width = pct + '%';
+    if (plan === 'free' || plan === 'standard') {
+      document.getElementById('upgradeBtn').style.display = 'block';
+    }
+  }
+
+  // Зареди данни за кварталите от backend (ако има) или използвай hardcoded
+  async function loadPriceData() {
+    try {
+      var res = await apiCall('getPriceData', { sessionId: getSession() });
+      if (!res.success || !res.data || res.data.length === 0) return; // fallback to hardcoded
+
+      // Обнови allDistricts с реални данни от Sheets
+      res.data.forEach(function(row) {
+        var d = allDistricts.find(function(d) {
+          return d.name.toLowerCase() === (row.district || '').toLowerCase();
+        });
+        if (d) {
+          if (row.avgPrice) d.price = row.avgPrice;
+          if (row.trend) d.trend = (row.trend > 0 ? '+' : '') + row.trend + '%';
+          if (row.trend > 0) d.dir = 'up';
+          else if (row.trend < 0) d.dir = 'down';
+          else d.dir = 'flat';
+        }
+      });
+
+      // Обнови district cards
+      updateDistrictCards();
+    } catch(e) {
+      console.log('Using hardcoded price data:', e.message);
+    }
+  }
+
+  function updateDistrictCards() {
+    // Обнови цените в карточките
+    var cards = document.querySelectorAll('.district-card');
+    cards.forEach(function(card) {
+      var nameEl = card.querySelector('.d-name');
+      if (!nameEl) return;
+      var name = nameEl.textContent.replace(/^[^\s]+ /, '').trim();
+      var d = allDistricts.find(function(d) { return d.name === name; });
+      if (!d) return;
+      var priceEl = card.querySelector('.d-price');
+      var trendEl = card.querySelector('.d-trend');
+      if (priceEl) priceEl.textContent = d.price.toLocaleString('bg');
+      if (trendEl) {
+        trendEl.textContent = (d.dir === 'up' ? '↑ ' : d.dir === 'down' ? '↓ ' : '→ ') + d.trend;
+        trendEl.className = 'd-trend ' + d.dir;
       }
     });
-    document.querySelectorAll('.user-plan').forEach(function(el) {
-      var plans = {free:'Безплатен план', standard:'Стандарт', pro:'Про', broker:'Брокер'};
-      el.textContent = plans[u.plan] || 'Безплатен план';
-    });
-  })();
+    updateChart();
+  }
 
-  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
+  loadUserSidebar();
+  loadPriceData();
 
   const months = ['Фев','Мар','Апр','Май','Юни','Юли','Авг','Сеп','Окт','Ное','Дек','Яну'];
 
