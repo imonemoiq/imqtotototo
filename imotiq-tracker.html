@@ -3,139 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ImotIQ — Моите Alerts</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>ImotIQ — Квартален Трекер</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --gold:#C9A84C; --gold-light:#E8C97A; --gold-dim:rgba(201,168,76,0.12);
-    --dark:#0A0A0F; --dark-2:#111118; --dark-3:#1A1A24;
-    --cream:#F5F0E8; --cream-dim:#D4CCB8;
-    --green:#2ECC8A; --green-dim:rgba(46,204,138,0.12);
-    --red:#E84C4C; --red-dim:rgba(232,76,76,0.12);
-    --blue:#4C7AC9; --blue-dim:rgba(76,122,201,0.12);
-    --orange:#F39C12; --orange-dim:rgba(243,156,18,0.12);
-    --sidebar:260px;
+    --gold: #C9A84C; --gold-light: #E8C97A; --gold-dim: rgba(201,168,76,0.12);
+    --dark: #0A0A0F; --dark-2: #111118; --dark-3: #1A1A24; --dark-4: #22222E;
+    --cream: #F5F0E8; --cream-dim: #D4CCB8;
+    --green: #2ECC8A; --green-dim: rgba(46,204,138,0.12);
+    --red: #E84C4C; --red-dim: rgba(232,76,76,0.12);
+    --accent: #4C7AC9; --accent-dim: rgba(76,122,201,0.12);
+    --sidebar: 260px;
   }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--dark);color:var(--cream);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;cursor:auto;}
-  .cursor{width:10px;height:10px;background:var(--gold);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform 0.15s;mix-blend-mode:difference;}
-  .cursor-ring{width:32px;height:32px;border:1px solid rgba(201,168,76,0.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:all 0.08s;}
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--dark); color:var(--cream); font-family:'DM Sans',sans-serif; display:flex; min-height:100vh; cursor:auto; }
+
+  .cursor { width:10px; height:10px; background:var(--gold); border-radius:50%; position:fixed; pointer-events:none; z-index:9999; transition:transform 0.15s; mix-blend-mode:difference; }
+  .cursor-ring { width:32px; height:32px; border:1px solid rgba(201,168,76,0.5); border-radius:50%; position:fixed; pointer-events:none; z-index:9998; transition:all 0.08s; }
 
   /* SIDEBAR */
-  .sidebar{width:var(--sidebar);min-height:100vh;background:var(--dark-2);border-right:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
-  .sidebar-logo{padding:28px 24px 24px;border-bottom:1px solid rgba(255,255,255,0.05);font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;}
-  .sidebar-logo span{color:var(--gold);}
-  .sidebar-section{padding:20px 16px 8px;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(212,204,184,0.3);}
-  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:2px 8px;border-radius:8px;cursor:auto;transition:all 0.2s;color:var(--cream-dim);font-size:0.88rem;text-decoration:none;position:relative;}
-  .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--cream);}
-  .nav-item.active{background:var(--gold-dim);color:var(--gold);}
-  .nav-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--gold);border-radius:0 3px 3px 0;}
-  .nav-icon{width:18px;font-size:1rem;text-align:center;}
-  .nav-badge{margin-left:auto;background:var(--gold);color:var(--dark);font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:100px;font-family:'Syne',sans-serif;}
-  .sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,0.05);}
-  .plan-widget{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px;margin-bottom:12px;}
-  .plan-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;color:var(--gold);margin-bottom:4px;}
-  .plan-usage{font-size:0.72rem;color:var(--cream-dim);margin-bottom:8px;}
-  .usage-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
-  .usage-fill{height:100%;background:var(--gold);border-radius:3px;}
-  .upgrade-btn{display:block;text-align:center;padding:8px;background:var(--gold);color:var(--dark);border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;text-decoration:none;margin-top:10px;cursor:auto;transition:background 0.2s;}
-  .upgrade-btn:hover{background:var(--gold-light);}
-  .user-row{display:flex;align-items:center;gap:10px;}
-  .avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),#8B6A1F);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;color:var(--dark);flex-shrink:0;}
-  .user-name{font-size:0.82rem;font-weight:500;}
-  .user-plan{font-size:0.7rem;color:var(--cream-dim);}
-  .logout-btn{margin-left:auto;background:none;border:none;color:rgba(212,204,184,0.3);cursor:auto;font-size:0.8rem;transition:color 0.2s;}
-  .logout-btn:hover{color:var(--red);}
+  .sidebar { width:var(--sidebar); min-height:100vh; background:var(--dark-2); border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:50; }
+  .sidebar-logo { padding:28px 24px 24px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; }
+  .sidebar-logo span { color:var(--gold); }
+  .sidebar-section { padding:20px 16px 8px; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.14em; color:rgba(212,204,184,0.3); }
+  .nav-item { display:flex; align-items:center; gap:12px; padding:10px 16px; margin:2px 8px; border-radius:8px; cursor:auto; transition:all 0.2s; color:var(--cream-dim); font-size:0.88rem; text-decoration:none; position:relative; }
+  .nav-item:hover { background:rgba(255,255,255,0.04); color:var(--cream); }
+  .nav-item.active { background:var(--gold-dim); color:var(--gold); }
+  .nav-item.active::before { content:''; position:absolute; left:-8px; top:50%; transform:translateY(-50%); width:3px; height:60%; background:var(--gold); border-radius:0 3px 3px 0; }
+  .nav-icon { width:18px; font-size:1rem; text-align:center; }
+  .nav-badge { margin-left:auto; background:var(--gold); color:var(--dark); font-size:0.6rem; font-weight:700; padding:2px 7px; border-radius:100px; font-family:'Syne',sans-serif; }
+  .sidebar-bottom { margin-top:auto; padding:16px; border-top:1px solid rgba(255,255,255,0.05); }
+  .plan-widget { background:var(--gold-dim); border:1px solid rgba(201,168,76,0.2); border-radius:10px; padding:14px; margin-bottom:12px; }
+  .plan-name { font-family:'Syne',sans-serif; font-weight:700; font-size:0.75rem; color:var(--gold); margin-bottom:4px; }
+  .plan-usage { font-size:0.72rem; color:var(--cream-dim); margin-bottom:8px; }
+  .usage-bar { height:3px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
+  .usage-fill { height:100%; background:var(--gold); border-radius:3px; }
+  .upgrade-btn { display:block; text-align:center; padding:8px; background:var(--gold); color:var(--dark); border-radius:6px; font-family:'Syne',sans-serif; font-weight:700; font-size:0.72rem; text-decoration:none; margin-top:10px; cursor:auto; transition:background 0.2s; }
+  .upgrade-btn:hover { background:var(--gold-light); }
+  .user-row { display:flex; align-items:center; gap:10px; }
+  .avatar { width:34px; height:34px; background:linear-gradient(135deg,var(--gold),#8B6A1F); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:700; font-size:0.8rem; color:var(--dark); flex-shrink:0; }
+  .user-name { font-size:0.82rem; font-weight:500; }
+  .user-plan { font-size:0.7rem; color:var(--cream-dim); }
+  .logout-btn { margin-left:auto; background:none; border:none; color:rgba(212,204,184,0.3); cursor:auto; font-size:0.8rem; transition:color 0.2s; }
+  .logout-btn:hover { color:var(--red); }
 
   /* MAIN */
-  .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
-  .topbar{padding:20px 36px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;background:var(--dark);position:sticky;top:0;z-index:40;}
-  .page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;}
-  .notif-btn{width:36px;height:36px;background:var(--dark-3);border:1px solid rgba(255,255,255,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:auto;font-size:1rem;position:relative;}
-  .notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--gold);border-radius:50%;border:1.5px solid var(--dark);}
-  .content{padding:32px 36px;flex:1;}
+  .main { margin-left:var(--sidebar); flex:1; display:flex; flex-direction:column; }
+  .topbar { padding:20px 36px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between; background:var(--dark); position:sticky; top:0; z-index:40; }
+  .page-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .notif-btn { width:36px; height:36px; background:var(--dark-3); border:1px solid rgba(255,255,255,0.06); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:auto; font-size:1rem; position:relative; transition:border-color 0.2s; }
+  .notif-btn:hover { border-color:rgba(201,168,76,0.3); }
+  .notif-dot { position:absolute; top:6px; right:6px; width:7px; height:7px; background:var(--gold); border-radius:50%; border:1.5px solid var(--dark); }
 
-  /* STATS ROW */
-  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
-  .stat-box{background:var(--dark-3);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:18px 20px;}
-  .sb-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(212,204,184,0.4);margin-bottom:8px;}
-  .sb-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;line-height:1;}
-  .sb-sub{font-size:0.72rem;color:var(--cream-dim);margin-top:4px;}
+  .content { padding:32px 36px; flex:1; }
 
-  /* NEW ALERT CARD */
-  .new-alert-card{background:var(--dark-3);border:1px solid rgba(201,168,76,0.15);border-radius:16px;padding:28px;margin-bottom:24px;position:relative;overflow:hidden;}
-  .new-alert-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
-  .nac-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+  /* FILTER BAR */
+  .filter-bar {
+    display:flex; align-items:center; gap:12px; margin-bottom:28px; flex-wrap:wrap;
+  }
+  .filter-label { font-size:0.75rem; color:var(--cream-dim); margin-right:4px; }
+  .filter-btn {
+    padding:8px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);
+    background:none; color:var(--cream-dim); font-size:0.8rem; cursor:auto;
+    transition:all 0.2s; font-family:'DM Sans',sans-serif;
+  }
+  .filter-btn:hover { border-color:rgba(201,168,76,0.3); color:var(--cream); }
+  .filter-btn.active { background:var(--gold-dim); border-color:rgba(201,168,76,0.4); color:var(--gold); }
+  .filter-sep { width:1px; height:24px; background:rgba(255,255,255,0.07); margin:0 4px; }
 
-  .alert-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;}
-  .form-field{display:flex;flex-direction:column;gap:6px;}
-  .form-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--cream-dim);}
-  .form-input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.84rem;outline:none;transition:border-color 0.2s;}
-  .form-input:focus{border-color:rgba(201,168,76,0.4);}
-  .form-select{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:0.84rem;outline:none;cursor:auto;}
-  .add-btn{background:var(--gold);color:var(--dark);border:none;padding:10px 24px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;cursor:auto;transition:all 0.2s;white-space:nowrap;height:42px;}
-  .add-btn:hover{background:var(--gold-light);}
+  /* MAIN CHART CARD */
+  .chart-card {
+    background:var(--dark-3); border:1px solid rgba(255,255,255,0.06);
+    border-radius:16px; padding:28px; margin-bottom:20px;
+    position:relative; overflow:hidden;
+  }
+  .chart-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),transparent); }
+  .chart-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; }
+  .chart-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; margin-bottom:4px; }
+  .chart-sub { font-size:0.76rem; color:var(--cream-dim); }
+  .chart-legend { display:flex; gap:16px; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--cream-dim); }
+  .legend-dot { width:8px; height:8px; border-radius:50%; }
 
-  /* TABS */
-  .tabs{display:flex;gap:4px;margin-bottom:16px;background:rgba(255,255,255,0.03);border-radius:8px;padding:4px;width:fit-content;}
-  .tab{padding:8px 18px;border-radius:6px;border:none;background:none;color:var(--cream-dim);font-size:0.82rem;cursor:auto;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
-  .tab.active{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.25);}
 
-  /* ALERTS LIST */
-  .alerts-list{display:flex;flex-direction:column;gap:10px;}
+  /* DISTRICT CHIPS */
+  .chips-wrap {
+    overflow-x: auto; display:flex; gap:8px; padding-bottom:4px;
+    margin-bottom:20px; scrollbar-width:thin;
+    scrollbar-color: rgba(201,168,76,0.2) transparent;
+  }
+  .chips-wrap::-webkit-scrollbar { height:3px; }
+  .chips-wrap::-webkit-scrollbar-track { background:transparent; }
+  .chips-wrap::-webkit-scrollbar-thumb { background:rgba(201,168,76,0.2); border-radius:3px; }
+  .chip {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:7px 14px; border-radius:100px; border:1px solid rgba(255,255,255,0.08);
+    background:none; color:var(--cream-dim); font-size:0.78rem;
+    cursor:auto; white-space:nowrap; transition:all 0.2s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .chip:hover { border-color:rgba(201,168,76,0.3); color:var(--cream); }
+  .chip.active { color:var(--dark); font-weight:600; border-color:transparent; }
+  .chip-dot { width:7px; height:7px; border-radius:50%; }
 
-  .alert-card{background:var(--dark-3);border:1px solid rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;transition:border-color 0.2s;}
-  .alert-card:hover{border-color:rgba(201,168,76,0.2);}
-  .alert-card.has-new{border-color:rgba(201,168,76,0.3);}
-  .alert-card.has-new::before{content:'';display:block;height:2px;background:var(--gold);}
+  /* DISTRICT GRID */
+  .district-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+  .district-card {
+    background:var(--dark-3); border:1px solid rgba(255,255,255,0.05);
+    border-radius:12px; padding:20px; cursor:auto;
+    transition:all 0.25s; position:relative; overflow:hidden;
+  }
+  .district-card:hover { border-color:rgba(201,168,76,0.25); transform:translateY(-2px); }
+  .district-card.selected { border-color:rgba(201,168,76,0.5); background:rgba(201,168,76,0.05); }
+  .district-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--dcolor,var(--gold)); opacity:0.4; }
+  .d-name { font-family:'Syne',sans-serif; font-weight:700; font-size:0.9rem; margin-bottom:12px; }
+  .d-price { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; line-height:1; }
+  .d-unit { font-size:0.72rem; color:var(--cream-dim); margin-bottom:8px; }
+  .d-trend { display:inline-flex; align-items:center; gap:4px; font-size:0.75rem; font-weight:500; padding:3px 8px; border-radius:100px; }
+  .d-trend.up { background:var(--green-dim); color:var(--green); }
+  .d-trend.down { background:var(--red-dim); color:var(--red); }
+  .d-trend.flat { background:rgba(255,255,255,0.05); color:var(--cream-dim); }
+  .d-mini-chart { margin-top:14px; height:36px; }
 
-  .alert-main{display:grid;grid-template-columns:auto 1fr auto auto;gap:16px;align-items:center;padding:16px 20px;}
-  .alert-icon-wrap{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
-  .alert-icon-wrap.active{background:var(--gold-dim);}
-  .alert-icon-wrap.paused{background:rgba(255,255,255,0.04);}
-  .alert-info{}
-  .alert-name-row{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
-  .alert-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;}
-  .alert-new-badge{font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--gold);color:var(--dark);font-family:'Syne',sans-serif;animation:pulse 2s infinite;}
-  .alert-criteria{font-size:0.76rem;color:var(--cream-dim);}
-  .alert-stats{display:flex;gap:16px;text-align:right;}
-  .alert-stat{display:flex;flex-direction:column;gap:2px;}
-  .alert-stat-val{font-family:'Syne',sans-serif;font-weight:700;font-size:0.88rem;}
-  .alert-stat-label{font-size:0.62rem;color:rgba(212,204,184,0.4);text-transform:uppercase;letter-spacing:0.06em;}
-  .alert-actions{display:flex;gap:6px;flex-shrink:0;}
-  .alert-btn{width:32px;height:32px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:none;color:var(--cream-dim);cursor:auto;transition:all 0.2s;display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
-  .alert-btn:hover{border-color:rgba(201,168,76,0.3);color:var(--cream);}
-  .alert-btn.danger:hover{border-color:rgba(232,76,76,0.3);color:var(--red);}
+  /* BOTTOM ROW */
+  .bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .panel { background:var(--dark-3); border:1px solid rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; }
+  .panel-header { padding:18px 22px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between; }
+  .panel-title { font-family:'Syne',sans-serif; font-weight:700; font-size:0.9rem; }
+  .panel-action { font-size:0.74rem; color:var(--gold); cursor:auto; text-decoration:none; }
 
-  /* MATCHES */
-  .alert-matches{border-top:1px solid rgba(255,255,255,0.04);padding:0;}
-  .match-item{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.2s;}
-  .match-item:last-child{border-bottom:none;}
-  .match-item:hover{background:rgba(255,255,255,0.02);}
-  .match-name{font-size:0.82rem;font-weight:500;}
-  .match-meta{font-size:0.72rem;color:var(--cream-dim);}
-  .match-price{font-family:'Syne',sans-serif;font-weight:700;font-size:0.84rem;color:var(--gold);}
-  .match-tag{font-size:0.62rem;padding:2px 7px;border-radius:4px;font-family:'Syne',sans-serif;font-weight:600;}
-  .tag-hot{background:var(--gold-dim);color:var(--gold);}
-  .tag-new{background:var(--green-dim);color:var(--green);}
-  .tag-drop{background:var(--red-dim);color:var(--red);}
-  .match-action{color:var(--blue);font-size:0.75rem;cursor:auto;text-decoration:none;white-space:nowrap;}
-  .match-action:hover{text-decoration:underline;}
+  /* TOP LIST */
+  .top-item { display:flex; align-items:center; gap:14px; padding:13px 22px; border-bottom:1px solid rgba(255,255,255,0.03); transition:background 0.2s; }
+  .top-item:last-child { border-bottom:none; }
+  .top-item:hover { background:rgba(255,255,255,0.02); }
+  .top-rank { font-family:'Syne',sans-serif; font-weight:800; font-size:0.8rem; color:rgba(212,204,184,0.3); width:20px; text-align:center; }
+  .top-info { flex:1; }
+  .top-name { font-size:0.84rem; font-weight:500; }
+  .top-sub { font-size:0.72rem; color:var(--cream-dim); }
+  .top-price { font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; color:var(--gold); }
+  .top-change { font-size:0.72rem; text-align:right; }
+  .top-change.up { color:var(--green); }
+  .top-change.down { color:var(--red); }
 
-  /* EXPAND TOGGLE */
-  .expand-btn{width:100%;padding:10px;border:none;background:rgba(255,255,255,0.02);color:var(--cream-dim);font-size:0.76rem;cursor:auto;transition:all 0.2s;border-top:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;gap:6px;}
-  .expand-btn:hover{background:rgba(255,255,255,0.04);color:var(--cream);}
+  /* HEATMAP */
+  .heatmap-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:4px; padding:20px; }
+  .heat-cell {
+    aspect-ratio:1; border-radius:4px; display:flex; align-items:center; justify-content:center;
+    font-size:0.55rem; font-weight:600; cursor:auto; transition:transform 0.2s;
+    color:var(--dark); font-family:'Syne',sans-serif;
+  }
+  .heat-cell:hover { transform:scale(1.15); z-index:1; position:relative; }
 
-  /* EMPTY STATE */
-  .empty-state{text-align:center;padding:60px 24px;color:rgba(212,204,184,0.3);}
-  .empty-icon{font-size:3rem;margin-bottom:12px;}
-  .empty-text{font-size:0.88rem;}
-
-  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-  .fade-in{animation:fadeUp 0.4s ease both;}
-  .fade-in:nth-child(2){animation-delay:0.06s;}
-  .fade-in:nth-child(3){animation-delay:0.12s;}
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .fade-in { animation:fadeUp 0.5s ease both; }
 
   /* ── MOBILE RESPONSIVE ── */
   .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:49;backdrop-filter:blur(4px);}
@@ -274,28 +296,31 @@
     <div class="sidebar-section">Главно</div>
     <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">⚡</span> Dashboard</a>
     <a class="nav-item" href="imotiq-dashboard.html"><span class="nav-icon">🧠</span> AI Анализ</a>
-    <a class="nav-item active" href="#"><span class="nav-icon">🔔</span> Моите Alerts<span class="nav-badge">3</span></a>
+    <a class="nav-item" href="imotiq-alerts.html"><span class="nav-icon">🔔</span> Моите Alerts<span class="nav-badge">3</span></a>
+
     <div class="sidebar-section">Пазар</div>
-    <a class="nav-item" href="imotiq-tracker.html"><span class="nav-icon">📊</span> Квартален Трекер</a>
+    <a class="nav-item active" href="imotiq-tracker.html"><span class="nav-icon">📊</span> Квартален Трекер</a>
     <a class="nav-item" href="imotiq-trend.html"><span class="nav-icon">📈</span> Ценови Тренд</a>
     <a class="nav-item" href="imotiq-report.html"><span class="nav-icon">🏘️</span> Квартален Доклад</a>
+
     <div class="sidebar-section">Инструменти</div>
     <a class="nav-item" href="imotiq-calculator.html"><span class="nav-icon">⚖️</span> Наем vs Купуване</a>
     <a class="nav-item" href="imotiq-detector.html"><span class="nav-icon">🔍</span> Фалшиви Обяви</a>
     <a class="nav-item" href="imotiq-history.html"><span class="nav-icon">📋</span> История</a>
+
     <div class="sidebar-section">Акаунт</div>
     <a class="nav-item" href="imotiq-settings.html"><span class="nav-icon">⚙️</span> Настройки</a>
   </div>
   <div class="sidebar-bottom">
-    <div class="plan-widget" id="planWidget">
-      <div class="plan-name" id="planName">⏳ Зарежда...</div>
-      <div class="plan-usage" id="planUsage"></div>
-      <div class="usage-bar"><div class="usage-fill" id="usageFill" style="width:0%"></div></div>
-      <a href="imotiq-settings.html" class="upgrade-btn" id="upgradeBtn" style="display:none">Надгради →</a>
+    <div class="plan-widget">
+      <div class="plan-name">🆓 Безплатен план</div>
+      <div class="plan-usage">1 от 1 анализа използван</div>
+      <div class="usage-bar"><div class="usage-fill" style="width:100%"></div></div>
+      <a href="#" class="upgrade-btn">Надгради към Стандарт →</a>
     </div>
     <div class="user-row">
-      <div class="avatar" id="sidebarAvatar">?</div>
-      <div><div class="user-name" id="sidebarName">...</div><div class="user-plan" id="sidebarPlan">...</div></div>
+      <div class="avatar">ИИ</div>
+      <div><div class="user-name">Иван Иванов</div><div class="user-plan">Безплатен план</div></div>
       <button class="logout-btn" onclick="logout()">⏻</button>
     </div>
   </div>
@@ -304,8 +329,8 @@
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
-    <div class="page-title">🔔 Моите Alerts</div>
-    <div style="display:flex;align-items:center;gap:12px;">
+    <div class="page-title">📊 Квартален Трекер</div>
+    <div class="topbar-right">
       <div style="font-size:0.78rem;color:var(--cream-dim)" id="currentDate"></div>
       <div class="notif-btn">🔔<div class="notif-dot"></div></div>
     </div>
@@ -313,475 +338,328 @@
 
   <div class="content">
 
-    <!-- STATS -->
-    <div class="stats-row">
-      <div class="stat-box fade-in">
-        <div class="sb-label">Активни Alerts</div>
-        <div class="sb-val" id="sbActive">—</div>
-        <div class="sb-sub" id="sbActiveSub">зарежда...</div>
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <span class="filter-label">Тип имот:</span>
+      <button class="filter-btn active" onclick="setFilter(this,'type')">Всички</button>
+      <button class="filter-btn" onclick="setFilter(this,'type')">Апартаменти</button>
+      <button class="filter-btn" onclick="setFilter(this,'type')">Къщи</button>
+      <button class="filter-btn" onclick="setFilter(this,'type')">Студия</button>
+      <div class="filter-sep"></div>
+      <span class="filter-label">Период:</span>
+      <button class="filter-btn active" onclick="setFilter(this,'period')">12 месеца</button>
+      <button class="filter-btn" onclick="setFilter(this,'period')">6 месеца</button>
+      <button class="filter-btn" onclick="setFilter(this,'period')">3 месеца</button>
+    </div>
+
+    <!-- CHIPS -->
+    <div class="chips-wrap" id="chipsWrap"></div>
+
+    <!-- MAIN CHART -->
+    <div class="chart-card fade-in">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Среден лв/м² по квартали — последните 12 месеца</div>
+          <div class="chart-sub" id="chartSub">Избери квартали от горе за сравнение</div>
+        </div>
+        <div class="chart-legend" id="chartLegend"></div>
       </div>
-      <div class="stat-box fade-in">
-        <div class="sb-label">Нови съвпадения</div>
-        <div class="sb-val" id="sbMatches" style="color:var(--gold)">—</div>
-        <div class="sb-sub">от последното влизане</div>
+      <canvas id="mainChart" height="90"></canvas>
+    </div>
+
+    <!-- DISTRICT CARDS -->
+    <div class="district-grid">
+      <div class="district-card selected fade-in" style="--dcolor:#C9A84C" onclick="selectDistrict(this,'Лозенец')">
+        <div class="d-name">🏙️ Лозенец</div>
+        <div class="d-price">3,240</div>
+        <div class="d-unit">лв / м²</div>
+        <span class="d-trend up">↑ +4.2%</span>
+        <canvas class="d-mini-chart" id="mini0"></canvas>
       </div>
-      <div class="stat-box fade-in">
-        <div class="sb-label">Твоят план</div>
-        <div class="sb-val" id="sbPlan" style="font-size:1.1rem;">—</div>
-        <div class="sb-sub" id="sbPlanSub"></div>
+      <div class="district-card fade-in" style="--dcolor:#4C7AC9" onclick="selectDistrict(this,'Младост')">
+        <div class="d-name">🏢 Младост</div>
+        <div class="d-price">2,180</div>
+        <div class="d-unit">лв / м²</div>
+        <span class="d-trend up">↑ +2.8%</span>
+        <canvas class="d-mini-chart" id="mini1"></canvas>
       </div>
-      <div class="stat-box fade-in" style="border-color:rgba(201,168,76,0.2);background:rgba(201,168,76,0.04);">
-        <div class="sb-label">Лимит alerts</div>
-        <div class="sb-val" id="sbLimit" style="font-size:1rem;color:var(--gold)">—</div>
-        <div class="sb-sub" id="sbLimitSub"><a href="imotiq-settings.html" style="color:var(--gold);text-decoration:none;">Надгради →</a></div>
+      <div class="district-card fade-in" style="--dcolor:#2ECC8A" onclick="selectDistrict(this,'Витоша')">
+        <div class="d-name">🌿 Витоша</div>
+        <div class="d-price">2,640</div>
+        <div class="d-unit">лв / м²</div>
+        <span class="d-trend up">↑ +1.9%</span>
+        <canvas class="d-mini-chart" id="mini2"></canvas>
+      </div>
+      <div class="district-card fade-in" style="--dcolor:#E84C4C" onclick="selectDistrict(this,'Студентски')">
+        <div class="d-name">🎓 Студентски</div>
+        <div class="d-price">1,820</div>
+        <div class="d-unit">лв / м²</div>
+        <span class="d-trend down">↓ -0.5%</span>
+        <canvas class="d-mini-chart" id="mini3"></canvas>
+      </div>
+      <div class="district-card fade-in" style="--dcolor:#9B59B6" onclick="selectDistrict(this,'Надежда')">
+        <div class="d-name">🏘️ Надежда</div>
+        <div class="d-price">1,560</div>
+        <div class="d-unit">лв / м²</div>
+        <span class="d-trend flat">→ +0.2%</span>
+        <canvas class="d-mini-chart" id="mini4"></canvas>
+      </div>
+      <div class="district-card fade-in" style="--dcolor:#F39C12" onclick="selectDistrict(this,'Люлин')">
+        <div class="d-name">🏗️ Люлин</div>
+        <div class="d-price">1,340</div>
+        <div class="d-unit">лв / м²</div>
+        <span class="d-trend up">↑ +3.1%</span>
+        <canvas class="d-mini-chart" id="mini5"></canvas>
       </div>
     </div>
 
-    <!-- NEW ALERT -->
-    <div class="new-alert-card fade-in">
-      <div class="nac-title">➕ Добави нов Alert</div>
-      <div class="alert-form">
-        <div class="form-field">
-          <div class="form-label">Квартал</div>
-          <select class="form-select">
-            <option>🏙️ Лозенец</option>
-            <option>🏢 Младост</option>
-            <option>🌿 Витоша</option>
-            <option>🏘️ Надежда</option>
-            <option>🌲 Симеоново</option>
-            <option>🏡 Бояна</option>
-            <option>🏗️ Люлин</option>
-            <option>🎓 Студентски</option>
-          </select>
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+      <!-- TOP по цена -->
+      <div class="panel fade-in">
+        <div class="panel-header">
+          <div class="panel-title">🏆 Топ квартали по ръст на цените</div>
+          <a href="#" class="panel-action">Пълна листа</a>
         </div>
-        <div class="form-field">
-          <div class="form-label">Максимална цена</div>
-          <input class="form-input" type="text" placeholder="напр. 300000 лв">
+        <div class="top-item">
+          <div class="top-rank">1</div>
+          <div class="top-info"><div class="top-name">Лозенец</div><div class="top-sub">Централен, висок клас</div></div>
+          <div><div class="top-price">3,240 лв/м²</div><div class="top-change up">↑ +4.2%</div></div>
         </div>
-        <div class="form-field">
-          <div class="form-label">Тип имот</div>
-          <select class="form-select">
-            <option>🏠 Всички</option>
-            <option>🛋️ Апартамент</option>
-            <option>🏡 Къща</option>
-            <option>📦 Студио</option>
-          </select>
+        <div class="top-item">
+          <div class="top-rank">2</div>
+          <div class="top-info"><div class="top-name">Люлин</div><div class="top-sub">Западна Sofia, растящ</div></div>
+          <div><div class="top-price">1,340 лв/м²</div><div class="top-change up">↑ +3.1%</div></div>
         </div>
-        <button class="add-btn" onclick="addAlert()">+ Добави</button>
+        <div class="top-item">
+          <div class="top-rank">3</div>
+          <div class="top-info"><div class="top-name">Младост</div><div class="top-sub">Бизнес зона, търсен</div></div>
+          <div><div class="top-price">2,180 лв/м²</div><div class="top-change up">↑ +2.8%</div></div>
+        </div>
+        <div class="top-item">
+          <div class="top-rank">4</div>
+          <div class="top-info"><div class="top-name">Витоша</div><div class="top-sub">Южен, зелена среда</div></div>
+          <div><div class="top-price">2,640 лв/м²</div><div class="top-change up">↑ +1.9%</div></div>
+        </div>
+        <div class="top-item">
+          <div class="top-rank">5</div>
+          <div class="top-info"><div class="top-name">Надежда</div><div class="top-sub">Северен, достъпен</div></div>
+          <div><div class="top-price">1,560 лв/м²</div><div class="top-change flat">→ +0.2%</div></div>
+        </div>
+        <div class="top-item">
+          <div class="top-rank">6</div>
+          <div class="top-info"><div class="top-name">Студентски</div><div class="top-sub">Наемен пазар</div></div>
+          <div><div class="top-price">1,820 лв/м²</div><div class="top-change down">↓ -0.5%</div></div>
+        </div>
+      </div>
+
+      <!-- HEATMAP -->
+      <div class="panel fade-in">
+        <div class="panel-header">
+          <div class="panel-title">🗺️ Ценова топлинна карта</div>
+          <span style="font-size:0.72rem;color:var(--cream-dim)">лв/м²</span>
+        </div>
+        <div class="heatmap-grid" id="heatmap"></div>
+        <div style="padding:12px 20px;display:flex;gap:16px;align-items:center;border-top:1px solid rgba(255,255,255,0.04)">
+          <span style="font-size:0.68rem;color:var(--cream-dim)">По-ниска цена</span>
+          <div style="flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#1a3a2a,#2ECC8A,#C9A84C,#E84C4C)"></div>
+          <span style="font-size:0.68rem;color:var(--cream-dim)">По-висока цена</span>
+        </div>
       </div>
     </div>
 
-    <!-- TABS -->
-    <div class="tabs">
-      <button class="tab active" onclick="setTab(this,'all')" id="tabAll">Всички (0)</button>
-      <button class="tab" onclick="setTab(this,'new')" id="tabNew">Нови съвпадения (0)</button>
-      <button class="tab" onclick="setTab(this,'paused')" id="tabPaused">Паузирани (0)</button>
-    </div>
-
-    <!-- ALERTS LIST -->
-    <div class="alerts-list" id="alertsList">
-
-      <!-- ALERT 1 — with matches expanded -->
-      <div class="alert-card has-new fade-in">
-        <div class="alert-main">
-          <div class="alert-icon-wrap active">🏙️</div>
-          <div class="alert-info">
-            <div class="alert-name-row">
-              <div class="alert-name">Лозенец — до 300,000 лв</div>
-              <span class="alert-new-badge">3 НОВИ</span>
-            </div>
-            <div class="alert-criteria">Апартамент · Лозенец · Макс 300,000 лв · Всички размери · Сканира на 6ч</div>
-          </div>
-          <div class="alert-stats">
-            <div class="alert-stat">
-              <div class="alert-stat-val" style="color:var(--gold)">3</div>
-              <div class="alert-stat-label">Нови</div>
-            </div>
-            <div class="alert-stat">
-              <div class="alert-stat-val">47</div>
-              <div class="alert-stat-label">Общо</div>
-            </div>
-          </div>
-          <div class="alert-actions">
-            <button class="alert-btn" title="Пауза">⏸</button>
-            <button class="alert-btn" title="Редактирай">✏️</button>
-            <button class="alert-btn danger" title="Изтрий" onclick="deleteAlert(this)">🗑️</button>
-          </div>
-        </div>
-        <div class="alert-matches">
-          <div class="match-item">
-            <div>
-              <div class="match-name">3-стаен, 92 м², ет.4</div>
-              <div class="match-meta">бул. Черни Връх 45 · Публикуван преди 2ч</div>
-            </div>
-            <div class="match-price">278,000 лв</div>
-            <span class="match-tag tag-hot">🔥 -8% под пазара</span>
-            <a href="#" class="match-action" onclick="analyzeFromAlert(this)" data-url="">Анализирай →</a>
-          </div>
-          <div class="match-item">
-            <div>
-              <div class="match-name">2-стаен, 68 м², ет.2</div>
-              <div class="match-meta">ул. Хемус 12 · Публикуван преди 5ч</div>
-            </div>
-            <div class="match-price">245,000 лв</div>
-            <span class="match-tag tag-new">✨ Нова</span>
-            <a href="#" class="match-action" onclick="analyzeFromAlert(this)" data-url="">Анализирай →</a>
-          </div>
-          <div class="match-item">
-            <div>
-              <div class="match-name">4-стаен, 120 м², ет.6</div>
-              <div class="match-meta">ул. Атанас Далчев 8 · Публикуван вчера</div>
-            </div>
-            <div class="match-price">299,000 лв</div>
-            <span class="match-tag tag-new">✨ Нова</span>
-            <a href="#" class="match-action" onclick="analyzeFromAlert(this)" data-url="">Анализирай →</a>
-          </div>
-        </div>
-        <button class="expand-btn">Виж всички 47 съвпадения ↓</button>
-      </div>
-
-      <!-- ALERT 2 -->
-      <div class="alert-card has-new fade-in">
-        <div class="alert-main">
-          <div class="alert-icon-wrap active">🏢</div>
-          <div class="alert-info">
-            <div class="alert-name-row">
-              <div class="alert-name">Младост — до 180,000 лв</div>
-              <span class="alert-new-badge">2 НОВИ</span>
-            </div>
-            <div class="alert-criteria">Апартамент · Младост 1, 2, 3 · Макс 180,000 лв · Мин 60 м² · Сканира на 6ч</div>
-          </div>
-          <div class="alert-stats">
-            <div class="alert-stat">
-              <div class="alert-stat-val" style="color:var(--gold)">2</div>
-              <div class="alert-stat-label">Нови</div>
-            </div>
-            <div class="alert-stat">
-              <div class="alert-stat-val">31</div>
-              <div class="alert-stat-label">Общо</div>
-            </div>
-          </div>
-          <div class="alert-actions">
-            <button class="alert-btn" title="Пауза">⏸</button>
-            <button class="alert-btn" title="Редактирай">✏️</button>
-            <button class="alert-btn danger" title="Изтрий" onclick="deleteAlert(this)">🗑️</button>
-          </div>
-        </div>
-        <div class="alert-matches">
-          <div class="match-item">
-            <div>
-              <div class="match-name">2-стаен, 65 м², ет.3</div>
-              <div class="match-meta">бул. Александър Малинов 51 · Преди 4ч</div>
-            </div>
-            <div class="match-price">168,000 лв</div>
-            <span class="match-tag tag-drop">📉 Поевтиня с 8K</span>
-            <a href="#" class="match-action" onclick="analyzeFromAlert(this)" data-url="">Анализирай →</a>
-          </div>
-          <div class="match-item">
-            <div>
-              <div class="match-name">3-стаен, 82 м², ет.7</div>
-              <div class="match-meta">ул. Д-р Г. М. Димитров 22 · Вчера</div>
-            </div>
-            <div class="match-price">175,000 лв</div>
-            <span class="match-tag tag-new">✨ Нова</span>
-            <a href="#" class="match-action" onclick="analyzeFromAlert(this)" data-url="">Анализирай →</a>
-          </div>
-        </div>
-        <button class="expand-btn">Виж всички 31 съвпадения ↓</button>
-      </div>
-
-      <!-- ALERT 3 — no new -->
-      <div class="alert-card fade-in">
-        <div class="alert-main">
-          <div class="alert-icon-wrap active">🌿</div>
-          <div class="alert-info">
-            <div class="alert-name-row">
-              <div class="alert-name">Витоша — до 250,000 лв</div>
-            </div>
-            <div class="alert-criteria">Апартамент · Витоша · Макс 250,000 лв · Всички размери · Сканира на 6ч</div>
-          </div>
-          <div class="alert-stats">
-            <div class="alert-stat">
-              <div class="alert-stat-val" style="color:rgba(212,204,184,0.3)">0</div>
-              <div class="alert-stat-label">Нови</div>
-            </div>
-            <div class="alert-stat">
-              <div class="alert-stat-val">18</div>
-              <div class="alert-stat-label">Общо</div>
-            </div>
-          </div>
-          <div class="alert-actions">
-            <button class="alert-btn" title="Пауза">⏸</button>
-            <button class="alert-btn" title="Редактирай">✏️</button>
-            <button class="alert-btn danger" title="Изтрий" onclick="deleteAlert(this)">🗑️</button>
-          </div>
-        </div>
-        <button class="expand-btn">Виж всички 18 съвпадения ↓</button>
-      </div>
-
-    </div>
   </div>
 </main>
 
 <script>
+  // Date
+  
+  // Покажи реалното потребителско име
+  (function() {
+    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+    if (!u || !u.name) return;
+    document.querySelectorAll('.user-name').forEach(function(el) { el.textContent = u.name; });
+    document.querySelectorAll('.avatar').forEach(function(el) {
+      if (u.avatar) {
+        el.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+      } else {
+        el.textContent = u.name.charAt(0).toUpperCase();
+      }
+    });
+    document.querySelectorAll('.user-plan').forEach(function(el) {
+      var plans = {free:'Безплатен план', standard:'Стандарт', pro:'Про', broker:'Брокер'};
+      el.textContent = plans[u.plan] || 'Безплатен план';
+    });
+  })();
+
   document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
 
-  // Зареди реални данни за потребителя в sidebar
-  function loadUserSidebar() {
-    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
-    if (!u) return;
+  const months = ['Фев','Мар','Апр','Май','Юни','Юли','Авг','Сеп','Окт','Ное','Дек','Яну'];
 
-    var planNames = {free:'Безплатен план', standard:'Стандарт', pro:'Про план', broker:'Брокер план'};
-    var planIcons = {free:'🆓', standard:'⭐', pro:'🚀', broker:'🏢'};
-    var planLimits = {free:1, standard:10, pro:50, broker:200};
-    var plan = u.plan || 'free';
-    var used = u.analysesThisMonth || 0;
-    var max = planLimits[plan] || 1;
-    var pct = Math.min(Math.round(used/max*100), 100);
+  // ALL DISTRICTS DATA
+  const allDistricts = [
+    { name:'Лозенец',       emoji:'🏙️', color:'#C9A84C', price:3240, trend:'+4.2%', dir:'up',   data:[2840,2890,2950,2980,3020,3060,3090,3110,3140,3180,3210,3240] },
+    { name:'Иван Вазов',    emoji:'🏛️', color:'#E67E22', price:2980, trend:'+3.5%', dir:'up',   data:[2600,2640,2680,2710,2750,2790,2820,2850,2880,2910,2945,2980] },
+    { name:'Витоша',        emoji:'🌿', color:'#2ECC8A', price:2640, trend:'+1.9%', dir:'up',   data:[2480,2490,2510,2530,2550,2570,2580,2600,2615,2625,2635,2640] },
+    { name:'Симеоново',     emoji:'🌲', color:'#27AE60', price:3100, trend:'+5.1%', dir:'up',   data:[2700,2740,2780,2820,2870,2910,2940,2980,3010,3050,3075,3100] },
+    { name:'Бояна',         emoji:'🏡', color:'#16A085', price:2850, trend:'+2.3%', dir:'up',   data:[2620,2650,2680,2710,2740,2770,2790,2810,2820,2830,2842,2850] },
+    { name:'Младост 1',     emoji:'🏢', color:'#4C7AC9', price:2180, trend:'+2.8%', dir:'up',   data:[1980,2000,2020,2040,2060,2080,2090,2110,2130,2150,2165,2180] },
+    { name:'Младост 4',     emoji:'🏗️', color:'#2980B9', price:2050, trend:'+2.1%', dir:'up',   data:[1880,1900,1920,1940,1960,1975,1990,2005,2020,2030,2042,2050] },
+    { name:'Студентски',    emoji:'🎓', color:'#E84C4C', price:1820, trend:'-0.5%', dir:'down', data:[1850,1848,1845,1840,1838,1835,1832,1828,1825,1822,1820,1820] },
+    { name:'Дружба',        emoji:'🏘️', color:'#C0392B', price:1750, trend:'+0.8%', dir:'up',   data:[1680,1690,1700,1710,1718,1725,1730,1736,1740,1744,1748,1750] },
+    { name:'Надежда',       emoji:'🏘️', color:'#9B59B6', price:1560, trend:'+0.2%', dir:'flat', data:[1510,1515,1520,1525,1530,1535,1540,1545,1548,1552,1556,1560] },
+    { name:'Красна поляна', emoji:'🌆', color:'#8E44AD', price:1680, trend:'+1.4%', dir:'up',   data:[1580,1590,1600,1610,1620,1630,1638,1648,1658,1665,1673,1680] },
+    { name:'Люлин',         emoji:'🏗️', color:'#F39C12', price:1340, trend:'+3.1%', dir:'up',   data:[1180,1200,1220,1245,1265,1285,1295,1305,1315,1325,1333,1340] },
+    { name:'Обеля',         emoji:'🏚️', color:'#D68910', price:1280, trend:'+1.8%', dir:'up',   data:[1200,1210,1220,1228,1235,1242,1250,1258,1264,1270,1275,1280] },
+    { name:'Хиподрума',     emoji:'🐎', color:'#BA4A00', price:2350, trend:'+3.8%', dir:'up',   data:[2080,2110,2150,2185,2210,2240,2265,2285,2305,2325,2340,2350] },
+    { name:'Борово',        emoji:'🌳', color:'#1ABC9C', price:2420, trend:'+2.5%', dir:'up',   data:[2240,2265,2285,2310,2335,2355,2370,2385,2395,2405,2413,2420] },
+    { name:'Банишора',      emoji:'🏙️', color:'#48C9B0', price:1420, trend:'+1.2%', dir:'up',   data:[1340,1350,1360,1370,1378,1386,1394,1400,1407,1412,1417,1420] },
+    { name:'Захарна фабрика',emoji:'🏭',color:'#76D7C4', price:1490, trend:'+0.9%', dir:'up',   data:[1410,1420,1428,1436,1444,1452,1458,1465,1470,1477,1484,1490] },
+    { name:'Горна баня',    emoji:'💧', color:'#5DADE2', price:2400, trend:'+4.5%', dir:'up',   data:[2080,2120,2160,2200,2240,2275,2305,2330,2350,2370,2388,2400] },
+    { name:'Драгалевци',    emoji:'🏔️', color:'#3498DB', price:2700, trend:'+3.9%', dir:'up',   data:[2360,2400,2440,2480,2520,2560,2590,2620,2645,2665,2684,2700] },
+    { name:'Бъкстон',       emoji:'🏠', color:'#85C1E9', price:1920, trend:'+1.6%', dir:'up',   data:[1800,1815,1830,1845,1858,1870,1880,1890,1898,1906,1914,1920] },
+  ];
 
-    // Avatar
-    var avatarEl = document.getElementById('sidebarAvatar');
-    if (u.avatar) {
-      avatarEl.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+  // Active districts (initially top 5)
+  let activeNames = new Set(['Лозенец','Младост 1','Витоша','Студентски','Надежда']);
+
+  // Build chips
+  const chipsWrap = document.getElementById('chipsWrap');
+  allDistricts.forEach(d => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (activeNames.has(d.name) ? ' active' : '');
+    chip.style.background = activeNames.has(d.name) ? d.color : '';
+    chip.innerHTML = `<span class="chip-dot" style="background:${d.color}"></span>${d.emoji} ${d.name}`;
+    chip.dataset.name = d.name;
+    chip.addEventListener('click', () => toggleDistrict(d.name, chip, d.color));
+    chipsWrap.appendChild(chip);
+  });
+
+  // MAIN CHART
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  const mainChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: months, datasets: [] },
+    options: {
+      responsive:true, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:{
+        backgroundColor:'rgba(17,17,24,0.95)', borderColor:'rgba(201,168,76,0.2)', borderWidth:1,
+        titleColor:'#F5F0E8', bodyColor:'#D4CCB8', padding:12,
+        callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.y.toLocaleString()} лв/м²` }
+      }},
+      scales:{
+        x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'rgba(212,204,184,0.5)',font:{size:11,family:'DM Sans'}} },
+        y:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'rgba(212,204,184,0.5)',font:{size:11,family:'DM Sans'},callback:v=>v.toLocaleString()+' лв'}, min:1000 }
+      },
+      animation:{ duration:400 }
+    }
+  });
+
+  function updateChart() {
+    const active = allDistricts.filter(d => activeNames.has(d.name));
+    mainChart.data.datasets = active.map(d => ({
+      label: d.name,
+      data: d.data,
+      borderColor: d.color,
+      backgroundColor: d.color + '12',
+      tension: 0.4, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2
+    }));
+    mainChart.update();
+
+    // Update legend
+    const legend = document.getElementById('chartLegend');
+    legend.innerHTML = active.map(d => `<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div>${d.name}</div>`).join('');
+
+    // Update sub
+    document.getElementById('chartSub').textContent = active.length === 0
+      ? 'Избери квартали от горе за сравнение'
+      : `Сравняваш ${active.length} квартала едновременно`;
+  }
+
+  function toggleDistrict(name, chip, color) {
+    if (activeNames.has(name)) {
+      if (activeNames.size === 1) return; // keep at least 1
+      activeNames.delete(name);
+      chip.classList.remove('active');
+      chip.style.background = '';
     } else {
-      avatarEl.textContent = (u.name || '?').charAt(0).toUpperCase();
+      activeNames.add(name);
+      chip.classList.add('active');
+      chip.style.background = color;
     }
-
-    // Потребител
-    document.getElementById('sidebarName').textContent = u.name || u.email;
-    document.getElementById('sidebarPlan').textContent = planNames[plan] || plan;
-
-    // Plan widget
-    document.getElementById('planName').textContent = planIcons[plan] + ' ' + (planNames[plan] || plan);
-    document.getElementById('planUsage').textContent = used + ' от ' + max + ' анализа използвани';
-    document.getElementById('usageFill').style.width = pct + '%';
-
-    if (plan === 'free' || plan === 'standard') {
-      document.getElementById('upgradeBtn').style.display = 'block';
-    }
+    updateChart();
   }
 
-  function setTab(btn, tab) {
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-  }
+  updateChart(); // initial render
 
-  // Обнови таб броячите
-  function updateTabCounts(alerts) {
-    var all = alerts.length;
-    var newMatches = alerts.filter(function(a){ return (a.matchesTotal||0) > 0; }).length;
-    var paused = alerts.filter(function(a){ return !a.active; }).length;
-    var tabAll = document.getElementById('tabAll');
-    var tabNew = document.getElementById('tabNew');
-    var tabPaused = document.getElementById('tabPaused');
-    if(tabAll) tabAll.textContent = 'Всички (' + all + ')';
-    if(tabNew) tabNew.textContent = 'Нови съвпадения (' + newMatches + ')';
-    if(tabPaused) tabPaused.textContent = 'Паузирани (' + paused + ')';
-  }
+  // MINI CHARTS
+  const miniData = [
+    [2840,2890,2950,3020,3090,3140,3180,3240],
+    [1980,2000,2040,2060,2090,2130,2165,2180],
+    [2480,2510,2550,2580,2600,2615,2635,2640],
+    [1850,1845,1838,1832,1828,1825,1821,1820],
+    [1510,1520,1530,1540,1548,1552,1556,1560],
+    [1180,1200,1220,1250,1280,1300,1320,1340],
+  ];
+  const miniColors = ['#C9A84C','#4C7AC9','#2ECC8A','#E84C4C','#9B59B6','#F39C12'];
 
-  function addAlert() {
-    const btn = document.querySelector('.add-btn');
-    btn.textContent = '✓ Добавен!';
-    btn.style.background = 'var(--green)';
-    setTimeout(() => { btn.textContent = '+ Добави'; btn.style.background = ''; }, 2000);
-  }
-
-  function deleteAlert(btn) {
-    const card = btn.closest('.alert-card');
-    card.style.opacity = '0';
-    card.style.transform = 'translateX(20px)';
-    card.style.transition = 'all 0.3s ease';
-    setTimeout(() => card.remove(), 300);
-  }
-
-  // Expand toggle
-  document.querySelectorAll('.expand-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const matches = btn.previousElementSibling;
-      if(matches && matches.classList.contains('alert-matches')) {
-        const isHidden = matches.style.display === 'none';
-        matches.style.display = isHidden ? 'block' : 'none';
-        btn.textContent = isHidden ? 'Скрий ↑' : btn.textContent.replace('Скрий ↑', btn.dataset.original || btn.textContent);
-      }
+  miniData.forEach((data,i) => {
+    const c = document.getElementById('mini'+i).getContext('2d');
+    new Chart(c,{
+      type:'line',
+      data:{ labels:Array(8).fill(''), datasets:[{ data, borderColor:miniColors[i], borderWidth:2, tension:0.4, pointRadius:0, fill:true, backgroundColor: c => { const g=c.chart.ctx.createLinearGradient(0,0,0,36); g.addColorStop(0,miniColors[i].replace('#','rgba(').replace(/(..)(..)(..)/, (_,r,g2,b)=>`${parseInt(r,16)},${parseInt(g2,16)},${parseInt(b,16)}`)+',0.15)'); g.addColorStop(1,'transparent'); return g; } }] },
+      options:{ responsive:true, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}} }
     });
   });
 
+  // HEATMAP
+  const heatDistricts = ['Лозенец','Иван Вазов','Витоша','Борово','Дружба','Модерно',
+    'Младост 1','Младост 2','Студентски','Красно','Надежда','Хиподрума',
+    'Люлин','Обеля','Требич','Банишора','Орландовци','Красна поляна',
+    'Захарна фабрика','Волуяк','Бояна','Симеоново','Драгалевци','Горна баня'];
+  const heatPrices = [3240,2980,2640,2420,2180,2050,2180,2100,1820,2200,1560,2350,1340,1280,1380,1420,1250,1680,1490,1200,2850,3100,2700,2400];
 
-  // ── РЕАЛЕН BACKEND ЗА ALERTS ─────────────────────────────────────
-  function getBackendUrl() {
-    return localStorage.getItem('imotiq_backend_url') ||
-      'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
-  }
+  const max=Math.max(...heatPrices), min=Math.min(...heatPrices);
+  const heatmap = document.getElementById('heatmap');
+  heatPrices.forEach((p,i)=>{
+    const ratio=(p-min)/(max-min);
+    const r=Math.round(26+ratio*(232-26));
+    const g=Math.round(58+ratio*(76-204)+204*(1-ratio));
+    const b=Math.round(42+ratio*(76-138));
+    const cell=document.createElement('div');
+    cell.className='heat-cell';
+    cell.style.background=`rgb(${r},${Math.max(10,204-ratio*160)},${Math.max(10,138-ratio*96)})`;
+    cell.style.opacity=0.7+ratio*0.3;
+    cell.title=`${heatDistricts[i]}: ${p.toLocaleString()} лв/м²`;
+    cell.textContent=heatDistricts[i].substring(0,3);
+    heatmap.appendChild(cell);
+  });
 
-  async function api(action, data) {
-    try {
-      var payload = Object.assign({ action: action, sessionId: localStorage.getItem('imotiq_session') }, data || {});
-      var res = await fetch(getBackendUrl(), { method: 'POST', body: JSON.stringify(payload) });
-      return await res.json();
-    } catch(e) { return { success: false, error: e.message }; }
-  }
-
-  // Зареди alerts от backend при зареждане на страницата
-  async function loadAlerts() {
-    const listEl = document.getElementById('alertsList');
-    if (!listEl) return;
-
-    const result = await api('getAlerts');
-    if (!result.success || !result.alerts || result.alerts.length === 0) {
-      // Нямаме реални alerts — покажи empty state
-      listEl.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">🔔</div>
-          <div class="empty-text">Нямаш настроени alerts.<br>Добави своя първи alert по-горе!</div>
-        </div>`;
-      // Обнови статистиките
-      updateStats([]);
-      return;
-    }
-
-    // Рендерирай реалните alerts
-    listEl.innerHTML = result.alerts.map(a => `
-      <div class="alert-card ${a.matchesTotal > 0 ? 'has-new' : ''} fade-in" data-id="${a.id}">
-        <div class="alert-main">
-          <div class="alert-icon-wrap ${a.active ? 'active' : 'paused'}">
-            ${getDistrictEmoji(a.district)}
-          </div>
-          <div class="alert-info">
-            <div class="alert-name-row">
-              <div class="alert-name">${a.district} — до ${Number(a.maxPrice).toLocaleString('bg')} лв</div>
-              ${a.matchesTotal > 0 ? `<span class="alert-new-badge">${a.matchesTotal} НОВИ</span>` : ''}
-            </div>
-            <div class="alert-criteria">
-              ${a.propertyType !== 'all' ? a.propertyType : 'Всички типове'} · 
-              ${a.district} · 
-              Макс ${Number(a.maxPrice).toLocaleString('bg')} лв
-              ${a.minSize > 0 ? ' · Мин ' + a.minSize + ' м²' : ''}
-            </div>
-          </div>
-          <div class="alert-stats">
-            <div class="alert-stat">
-              <div class="alert-stat-val" style="color:${a.matchesTotal > 0 ? 'var(--gold)' : 'rgba(212,204,184,0.3)'}">${a.matchesTotal || 0}</div>
-              <div class="alert-stat-label">Нови</div>
-            </div>
-          </div>
-          <div class="alert-actions">
-            <button class="alert-btn" title="${a.active ? 'Пауза' : 'Активирай'}" onclick="toggleAlert('${a.id}', ${a.active})">
-              ${a.active ? '⏸' : '▶'}
-            </button>
-            <button class="alert-btn danger" title="Изтрий" onclick="deleteAlertReal('${a.id}', this)">🗑️</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    // Обнови статистики
-    updateStats(result.alerts);
-    updateTabCounts(result.alerts);
-  }
-
-  function getDistrictEmoji(district) {
-    const map = {'Лозенец':'🏙️','Младост':'🏢','Витоша':'🌿','Симеоново':'🌲','Бояна':'🏡','Надежда':'🏘️','Люлин':'🏗️','Студентски':'🎓'};
-    return map[district] || '📍';
-  }
-
-  // Добави нов alert
-  async function addAlert() {
-    const btn = document.querySelector('.add-btn');
-    const district = document.querySelector('.form-select').value.replace(/^[^ ]+ /, '');
-    const maxPrice = parseInt(document.querySelectorAll('.form-input')[0]?.value?.replace(/\D/g,'') || '0');
-    const propType = document.querySelectorAll('.form-select')[1]?.value?.replace(/^[^ ]+ /, '') || 'all';
-
-    if (!maxPrice || maxPrice < 10000) {
-      document.querySelector('.form-input').style.borderColor = 'var(--red)';
-      setTimeout(() => document.querySelector('.form-input').style.borderColor = '', 2000);
-      return;
-    }
-
-    btn.textContent = '⏳ Запазва...';
-    btn.disabled = true;
-
-    const result = await api('saveAlert', {
-      alert: { district, maxPrice, minPrice: 0, propertyType: propType, minSize: 0, maxSize: 0 }
-    });
-
-    if (result.success) {
-      btn.textContent = '✓ Добавен!';
-      btn.style.background = 'var(--green)';
-      setTimeout(() => {
-        btn.textContent = '+ Добави';
-        btn.style.background = '';
-        btn.disabled = false;
-        loadAlerts(); // Презареди
-      }, 1500);
-    } else {
-      btn.textContent = result.message || 'Грешка!';
-      btn.style.background = 'var(--red)';
-      setTimeout(() => { btn.textContent = '+ Добави'; btn.style.background = ''; btn.disabled = false; }, 3000);
-    }
-  }
-
-  // Изтрий alert
-  async function deleteAlertReal(alertId, btn) {
-    const card = btn.closest('.alert-card');
-    card.style.opacity = '0.5';
-
-    const result = await api('deleteAlert', { alertId });
-    if (result.success) {
-      card.style.transition = 'all 0.3s';
-      card.style.opacity = '0';
-      card.style.transform = 'translateX(20px)';
-      setTimeout(() => { card.remove(); loadAlerts(); }, 300);
-    } else {
-      card.style.opacity = '1';
-      alert('Грешка при изтриване');
-    }
-  }
-
-  // Пауза/Активиране — реален backend call
-  async function toggleAlert(alertId, currentActive) {
-    const card = document.querySelector('[data-id="' + alertId + '"]');
-    if (card) {
-      const btn = card.querySelector('.alert-btn');
-      if (btn) btn.textContent = '⏳';
-    }
-    const result = await api('toggleAlert', { alertId: alertId, active: !currentActive });
-    if (result.success) {
-      loadAlerts(); // Презареди за да покаже новото състояние
-    } else {
-      // Fallback — само UI промяна
-      if (card) {
-        const icon = card.querySelector('.alert-icon-wrap');
-        if (icon) icon.className = 'alert-icon-wrap ' + (currentActive ? 'paused' : 'active');
-        const btn = card.querySelector('.alert-btn');
-        if (btn) btn.textContent = currentActive ? '▶' : '⏸';
+  // FILTERS
+  function setFilter(btn, group) {
+    btn.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>{
+      if(b.closest('.filter-bar')===btn.closest('.filter-bar')) {
+        const sameGroup = (group==='type' ? b.dataset.group!=='period' : b.dataset.group==='period');
       }
-    }
+    });
+    // Simple: toggle active within siblings of same type
+    const allBtns = btn.parentElement.querySelectorAll ? [...btn.parentElement.children].filter(el=>el.classList.contains('filter-btn')) : [];
+    // Better approach: mark buttons
+    btn.parentElement.querySelectorAll && btn.parentElement.querySelectorAll('.filter-btn');
+    // Just toggle this button active among its "group"
+    const bar = btn.closest('.filter-bar');
+    const sepIdx = [...bar.children].indexOf(btn.closest('.filter-sep') || btn);
+    bar.querySelectorAll('.filter-btn').forEach(b => {
+      if(b === btn) b.classList.add('active');
+    });
+    // Keep it simple - each click activates clicked button
+    btn.classList.add('active');
   }
 
-  // Обнови статистиките
-  function updateStats(alerts) {
-    // Взимаме реалния план от localStorage (записан при логин)
-    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
-    var plan = u ? (u.plan || 'free') : 'free';
-    var planNames = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
-    var planLimits = {free:3, standard:10, pro:20, broker:50};
-    var max = planLimits[plan] || 3;
-    var active = alerts.filter(function(a) { return a.active; }).length;
-    var matches = alerts.reduce(function(s,a) { return s + (a.matchesTotal||0); }, 0);
-
-    document.getElementById('sbActive').textContent = active;
-    document.getElementById('sbActiveSub').textContent = 'от ' + alerts.length + ' общо';
-    document.getElementById('sbMatches').textContent = matches;
-    document.getElementById('sbPlan').textContent = planNames[plan] || plan;
-    document.getElementById('sbPlanSub').textContent = active + '/' + max + ' alerts използвани';
-    document.getElementById('sbLimit').textContent = max;
-    document.getElementById('sbLimitSub').innerHTML = plan === 'free'
-      ? '<a href="imotiq-settings.html" style="color:var(--gold);text-decoration:none;">Надгради за повече →</a>'
-      : '✓ ' + (max - active) + ' свободни';
+  function selectDistrict(card) {
+    document.querySelectorAll('.district-card').forEach(c=>c.classList.remove('selected'));
+    card.classList.add('selected');
   }
-
-  // Зареди при старт
-  window.addEventListener('load', function() { loadUserSidebar(); loadAlerts(); });
 
   // CURSOR
   const cursor=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
@@ -789,192 +667,7 @@
   document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursor.style.left=mx-5+'px'; cursor.style.top=my-5+'px'; });
   function animRing(){ rx+=(mx-rx-16)*0.12; ry+=(my-ry-16)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); }
   animRing();
-  document.querySelectorAll('a,button,input,select').forEach(el=>{ el.addEventListener('mouseenter',()=>cursor.style.transform='scale(2.5)'); el.addEventListener('mouseleave',()=>cursor.style.transform='scale(1)'); });
-
-  
-  function analyzeFromAlert(el) {
-    const url = el.getAttribute('data-url') || el.closest('.match-item')?.querySelector('.match-name')?.getAttribute('data-url');
-    if (url) {
-      localStorage.setItem('imotiq_analyze_url', url);
-    }
-    window.location.href = 'imotiq-dashboard.html';
-  }
-
-
-  // ── РЕАЛЕН BACKEND ЗА ALERTS ─────────────────────────────────────
-  function getBackendUrl() {
-    return localStorage.getItem('imotiq_backend_url') ||
-      'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
-  }
-
-  async function api(action, data) {
-    try {
-      var payload = Object.assign({ action: action, sessionId: localStorage.getItem('imotiq_session') }, data || {});
-      var res = await fetch(getBackendUrl(), { method: 'POST', body: JSON.stringify(payload) });
-      return await res.json();
-    } catch(e) { return { success: false, error: e.message }; }
-  }
-
-  // Зареди alerts от backend при зареждане на страницата
-  async function loadAlerts() {
-    const listEl = document.getElementById('alertsList');
-    if (!listEl) return;
-
-    const result = await api('getAlerts');
-    if (!result.success || !result.alerts || result.alerts.length === 0) {
-      // Нямаме реални alerts — покажи empty state
-      listEl.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">🔔</div>
-          <div class="empty-text">Нямаш настроени alerts.<br>Добави своя първи alert по-горе!</div>
-        </div>`;
-      // Обнови статистиките
-      updateStats([]);
-      return;
-    }
-
-    // Рендерирай реалните alerts
-    listEl.innerHTML = result.alerts.map(a => `
-      <div class="alert-card ${a.matchesTotal > 0 ? 'has-new' : ''} fade-in" data-id="${a.id}">
-        <div class="alert-main">
-          <div class="alert-icon-wrap ${a.active ? 'active' : 'paused'}">
-            ${getDistrictEmoji(a.district)}
-          </div>
-          <div class="alert-info">
-            <div class="alert-name-row">
-              <div class="alert-name">${a.district} — до ${Number(a.maxPrice).toLocaleString('bg')} лв</div>
-              ${a.matchesTotal > 0 ? `<span class="alert-new-badge">${a.matchesTotal} НОВИ</span>` : ''}
-            </div>
-            <div class="alert-criteria">
-              ${a.propertyType !== 'all' ? a.propertyType : 'Всички типове'} · 
-              ${a.district} · 
-              Макс ${Number(a.maxPrice).toLocaleString('bg')} лв
-              ${a.minSize > 0 ? ' · Мин ' + a.minSize + ' м²' : ''}
-            </div>
-          </div>
-          <div class="alert-stats">
-            <div class="alert-stat">
-              <div class="alert-stat-val" style="color:${a.matchesTotal > 0 ? 'var(--gold)' : 'rgba(212,204,184,0.3)'}">${a.matchesTotal || 0}</div>
-              <div class="alert-stat-label">Нови</div>
-            </div>
-          </div>
-          <div class="alert-actions">
-            <button class="alert-btn" title="${a.active ? 'Пауза' : 'Активирай'}" onclick="toggleAlert('${a.id}', ${a.active})">
-              ${a.active ? '⏸' : '▶'}
-            </button>
-            <button class="alert-btn danger" title="Изтрий" onclick="deleteAlertReal('${a.id}', this)">🗑️</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    // Обнови статистики
-    updateStats(result.alerts);
-  }
-
-  function getDistrictEmoji(district) {
-    const map = {'Лозенец':'🏙️','Младост':'🏢','Витоша':'🌿','Симеоново':'🌲','Бояна':'🏡','Надежда':'🏘️','Люлин':'🏗️','Студентски':'🎓'};
-    return map[district] || '📍';
-  }
-
-  // Добави нов alert
-  async function addAlert() {
-    const btn = document.querySelector('.add-btn');
-    const district = document.querySelector('.form-select').value.replace(/^[^ ]+ /, '');
-    const maxPrice = parseInt(document.querySelectorAll('.form-input')[0]?.value?.replace(/\D/g,'') || '0');
-    const propType = document.querySelectorAll('.form-select')[1]?.value?.replace(/^[^ ]+ /, '') || 'all';
-
-    if (!maxPrice || maxPrice < 10000) {
-      document.querySelector('.form-input').style.borderColor = 'var(--red)';
-      setTimeout(() => document.querySelector('.form-input').style.borderColor = '', 2000);
-      return;
-    }
-
-    btn.textContent = '⏳ Запазва...';
-    btn.disabled = true;
-
-    const result = await api('saveAlert', {
-      alert: { district, maxPrice, minPrice: 0, propertyType: propType, minSize: 0, maxSize: 0 }
-    });
-
-    if (result.success) {
-      btn.textContent = '✓ Добавен!';
-      btn.style.background = 'var(--green)';
-      setTimeout(() => {
-        btn.textContent = '+ Добави';
-        btn.style.background = '';
-        btn.disabled = false;
-        loadAlerts(); // Презареди
-      }, 1500);
-    } else {
-      btn.textContent = result.message || 'Грешка!';
-      btn.style.background = 'var(--red)';
-      setTimeout(() => { btn.textContent = '+ Добави'; btn.style.background = ''; btn.disabled = false; }, 3000);
-    }
-  }
-
-  // Изтрий alert
-  async function deleteAlertReal(alertId, btn) {
-    const card = btn.closest('.alert-card');
-    card.style.opacity = '0.5';
-
-    const result = await api('deleteAlert', { alertId });
-    if (result.success) {
-      card.style.transition = 'all 0.3s';
-      card.style.opacity = '0';
-      card.style.transform = 'translateX(20px)';
-      setTimeout(() => { card.remove(); loadAlerts(); }, 300);
-    } else {
-      card.style.opacity = '1';
-      alert('Грешка при изтриване');
-    }
-  }
-
-  // Пауза/Активиране — реален backend call
-  async function toggleAlert(alertId, currentActive) {
-    const card = document.querySelector('[data-id="' + alertId + '"]');
-    if (card) {
-      const btn = card.querySelector('.alert-btn');
-      if (btn) btn.textContent = '⏳';
-    }
-    const result = await api('toggleAlert', { alertId: alertId, active: !currentActive });
-    if (result.success) {
-      loadAlerts(); // Презареди за да покаже новото състояние
-    } else {
-      // Fallback — само UI промяна
-      if (card) {
-        const icon = card.querySelector('.alert-icon-wrap');
-        if (icon) icon.className = 'alert-icon-wrap ' + (currentActive ? 'paused' : 'active');
-        const btn = card.querySelector('.alert-btn');
-        if (btn) btn.textContent = currentActive ? '▶' : '⏸';
-      }
-    }
-  }
-
-  // Обнови статистиките
-  function updateStats(alerts) {
-    // Взимаме реалния план от localStorage (записан при логин)
-    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
-    var plan = u ? (u.plan || 'free') : 'free';
-    var planNames = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
-    var planLimits = {free:3, standard:10, pro:20, broker:50};
-    var max = planLimits[plan] || 3;
-    var active = alerts.filter(function(a) { return a.active; }).length;
-    var matches = alerts.reduce(function(s,a) { return s + (a.matchesTotal||0); }, 0);
-
-    document.getElementById('sbActive').textContent = active;
-    document.getElementById('sbActiveSub').textContent = 'от ' + alerts.length + ' общо';
-    document.getElementById('sbMatches').textContent = matches;
-    document.getElementById('sbPlan').textContent = planNames[plan] || plan;
-    document.getElementById('sbPlanSub').textContent = active + '/' + max + ' alerts използвани';
-    document.getElementById('sbLimit').textContent = max;
-    document.getElementById('sbLimitSub').innerHTML = plan === 'free'
-      ? '<a href="imotiq-settings.html" style="color:var(--gold);text-decoration:none;">Надгради за повече →</a>'
-      : '✓ ' + (max - active) + ' свободни';
-  }
-
-  // Зареди при старт
-  window.addEventListener('load', loadAlerts);
+  document.querySelectorAll('a,button,input').forEach(el=>{ el.addEventListener('mouseenter',()=>cursor.style.transform='scale(2.5)'); el.addEventListener('mouseleave',()=>cursor.style.transform='scale(1)'); });
 
   // MOBILE SIDEBAR
   function toggleSidebar(){
