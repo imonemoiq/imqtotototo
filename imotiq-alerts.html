@@ -317,23 +317,23 @@
     <div class="stats-row">
       <div class="stat-box fade-in">
         <div class="sb-label">Активни Alerts</div>
-        <div class="sb-val">3</div>
-        <div class="sb-sub">от 3 максимум (безплатен)</div>
+        <div class="sb-val" id="sbActive">—</div>
+        <div class="sb-sub" id="sbActiveSub">зарежда...</div>
       </div>
       <div class="stat-box fade-in">
         <div class="sb-label">Нови съвпадения</div>
-        <div class="sb-val" style="color:var(--gold)">7</div>
+        <div class="sb-val" id="sbMatches" style="color:var(--gold)">—</div>
         <div class="sb-sub">от последното влизане</div>
       </div>
       <div class="stat-box fade-in">
-        <div class="sb-label">Последно сканиране</div>
-        <div class="sb-val" style="font-size:1.1rem;">Преди 2ч</div>
-        <div class="sb-sub">Автоматично на 6 часа</div>
+        <div class="sb-label">Твоят план</div>
+        <div class="sb-val" id="sbPlan" style="font-size:1.1rem;">—</div>
+        <div class="sb-sub" id="sbPlanSub"></div>
       </div>
       <div class="stat-box fade-in" style="border-color:rgba(201,168,76,0.2);background:rgba(201,168,76,0.04);">
-        <div class="sb-label">Искаш повече alerts?</div>
-        <div class="sb-val" style="font-size:1rem;color:var(--gold)">До 20</div>
-        <div class="sb-sub"><a href="imotiq-settings.html" style="color:var(--gold);text-decoration:none;">Надгради до Стандарт →</a></div>
+        <div class="sb-label">Лимит alerts</div>
+        <div class="sb-val" id="sbLimit" style="font-size:1rem;color:var(--gold)">—</div>
+        <div class="sb-sub" id="sbLimitSub"><a href="imotiq-settings.html" style="color:var(--gold);text-decoration:none;">Надгради →</a></div>
       </div>
     </div>
 
@@ -560,14 +560,15 @@
 
 
   // ── РЕАЛЕН BACKEND ЗА ALERTS ─────────────────────────────────────
-  const BACKEND = 'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
+  function getBackendUrl() {
+    return localStorage.getItem('imotiq_backend_url') ||
+      'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
+  }
 
   async function api(action, data) {
     try {
-      const res = await fetch(BACKEND, {
-        method: 'POST',
-        body: JSON.stringify({ action, sessionId: localStorage.getItem('imotiq_session'), ...data }),
-      });
+      var payload = Object.assign({ action: action, sessionId: localStorage.getItem('imotiq_session') }, data || {});
+      var res = await fetch(getBackendUrl(), { method: 'POST', body: JSON.stringify(payload) });
       return await res.json();
     } catch(e) { return { success: false, error: e.message }; }
   }
@@ -586,8 +587,7 @@
           <div class="empty-text">Нямаш настроени alerts.<br>Добави своя първи alert по-горе!</div>
         </div>`;
       // Обнови статистиките
-      document.querySelectorAll('.sb-val')[0].textContent = '0';
-      document.querySelectorAll('.sb-val')[1].textContent = '0';
+      updateStats([]);
       return;
     }
 
@@ -627,8 +627,7 @@
     `).join('');
 
     // Обнови статистики
-    document.querySelectorAll('.sb-val')[0].textContent = result.alerts.filter(a => a.active).length;
-    document.querySelectorAll('.sb-val')[1].textContent = result.alerts.reduce((s,a) => s + (a.matchesTotal||0), 0);
+    updateStats(result.alerts);
   }
 
   function getDistrictEmoji(district) {
@@ -689,14 +688,46 @@
     }
   }
 
-  // Пауза/Активиране
+  // Пауза/Активиране — реален backend call
   async function toggleAlert(alertId, currentActive) {
-    // За момента само UI — backend toggle идва в следваща версия
-    const card = document.querySelector(`[data-id="${alertId}"]`);
+    const card = document.querySelector('[data-id="' + alertId + '"]');
     if (card) {
-      const icon = card.querySelector('.alert-icon-wrap');
-      if (icon) icon.className = `alert-icon-wrap ${currentActive ? 'paused' : 'active'}`;
+      const btn = card.querySelector('.alert-btn');
+      if (btn) btn.textContent = '⏳';
     }
+    const result = await api('toggleAlert', { alertId: alertId, active: !currentActive });
+    if (result.success) {
+      loadAlerts(); // Презареди за да покаже новото състояние
+    } else {
+      // Fallback — само UI промяна
+      if (card) {
+        const icon = card.querySelector('.alert-icon-wrap');
+        if (icon) icon.className = 'alert-icon-wrap ' + (currentActive ? 'paused' : 'active');
+        const btn = card.querySelector('.alert-btn');
+        if (btn) btn.textContent = currentActive ? '▶' : '⏸';
+      }
+    }
+  }
+
+  // Обнови статистиките
+  function updateStats(alerts) {
+    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+    var plan = u ? (u.plan || 'free') : 'free';
+    var planNames = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
+    var planLimits = {free:3, standard:10, pro:20, broker:50};
+    var max = planLimits[plan] || 3;
+    var active = alerts.filter(function(a) { return a.active; }).length;
+    var matches = alerts.reduce(function(s,a) { return s + (a.matchesTotal||0); }, 0);
+
+    document.getElementById('sbActive').textContent = active;
+    document.getElementById('sbActiveSub').textContent = 'от ' + alerts.length + ' общо';
+    document.getElementById('sbMatches').textContent = matches;
+    document.getElementById('sbPlan').textContent = planNames[plan] || plan;
+    document.getElementById('sbPlanSub').textContent = active + '/' + max + ' alerts използвани';
+    document.getElementById('sbLimit').textContent = max;
+    document.getElementById('sbLimitSub').innerHTML = plan === 'free'
+      ? '<a href="imotiq-settings.html" style="color:var(--gold);text-decoration:none;">Надгради за повече →</a>'
+      : '✓ ' + (max - active) + ' свободни';
   }
 
   // Зареди при старт
@@ -721,14 +752,15 @@
 
 
   // ── РЕАЛЕН BACKEND ЗА ALERTS ─────────────────────────────────────
-  const BACKEND = 'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
+  function getBackendUrl() {
+    return localStorage.getItem('imotiq_backend_url') ||
+      'https://script.google.com/macros/s/AKfycbzPG2CXusx_ddMN0aXP7Ix_zL324it-oyD_DGjZhYpAq7pr4w8ehOwVS6hqux5qKHyd8A/exec';
+  }
 
   async function api(action, data) {
     try {
-      const res = await fetch(BACKEND, {
-        method: 'POST',
-        body: JSON.stringify({ action, sessionId: localStorage.getItem('imotiq_session'), ...data }),
-      });
+      var payload = Object.assign({ action: action, sessionId: localStorage.getItem('imotiq_session') }, data || {});
+      var res = await fetch(getBackendUrl(), { method: 'POST', body: JSON.stringify(payload) });
       return await res.json();
     } catch(e) { return { success: false, error: e.message }; }
   }
@@ -747,8 +779,7 @@
           <div class="empty-text">Нямаш настроени alerts.<br>Добави своя първи alert по-горе!</div>
         </div>`;
       // Обнови статистиките
-      document.querySelectorAll('.sb-val')[0].textContent = '0';
-      document.querySelectorAll('.sb-val')[1].textContent = '0';
+      updateStats([]);
       return;
     }
 
@@ -788,8 +819,7 @@
     `).join('');
 
     // Обнови статистики
-    document.querySelectorAll('.sb-val')[0].textContent = result.alerts.filter(a => a.active).length;
-    document.querySelectorAll('.sb-val')[1].textContent = result.alerts.reduce((s,a) => s + (a.matchesTotal||0), 0);
+    updateStats(result.alerts);
   }
 
   function getDistrictEmoji(district) {
@@ -850,14 +880,46 @@
     }
   }
 
-  // Пауза/Активиране
+  // Пауза/Активиране — реален backend call
   async function toggleAlert(alertId, currentActive) {
-    // За момента само UI — backend toggle идва в следваща версия
-    const card = document.querySelector(`[data-id="${alertId}"]`);
+    const card = document.querySelector('[data-id="' + alertId + '"]');
     if (card) {
-      const icon = card.querySelector('.alert-icon-wrap');
-      if (icon) icon.className = `alert-icon-wrap ${currentActive ? 'paused' : 'active'}`;
+      const btn = card.querySelector('.alert-btn');
+      if (btn) btn.textContent = '⏳';
     }
+    const result = await api('toggleAlert', { alertId: alertId, active: !currentActive });
+    if (result.success) {
+      loadAlerts(); // Презареди за да покаже новото състояние
+    } else {
+      // Fallback — само UI промяна
+      if (card) {
+        const icon = card.querySelector('.alert-icon-wrap');
+        if (icon) icon.className = 'alert-icon-wrap ' + (currentActive ? 'paused' : 'active');
+        const btn = card.querySelector('.alert-btn');
+        if (btn) btn.textContent = currentActive ? '▶' : '⏸';
+      }
+    }
+  }
+
+  // Обнови статистиките
+  function updateStats(alerts) {
+    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+    var plan = u ? (u.plan || 'free') : 'free';
+    var planNames = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
+    var planLimits = {free:3, standard:10, pro:20, broker:50};
+    var max = planLimits[plan] || 3;
+    var active = alerts.filter(function(a) { return a.active; }).length;
+    var matches = alerts.reduce(function(s,a) { return s + (a.matchesTotal||0); }, 0);
+
+    document.getElementById('sbActive').textContent = active;
+    document.getElementById('sbActiveSub').textContent = 'от ' + alerts.length + ' общо';
+    document.getElementById('sbMatches').textContent = matches;
+    document.getElementById('sbPlan').textContent = planNames[plan] || plan;
+    document.getElementById('sbPlanSub').textContent = active + '/' + max + ' alerts използвани';
+    document.getElementById('sbLimit').textContent = max;
+    document.getElementById('sbLimitSub').innerHTML = plan === 'free'
+      ? '<a href="imotiq-settings.html" style="color:var(--gold);text-decoration:none;">Надгради за повече →</a>'
+      : '✓ ' + (max - active) + ' свободни';
   }
 
   // Зареди при старт
