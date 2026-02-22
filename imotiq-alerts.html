@@ -287,15 +287,15 @@
     <a class="nav-item" href="imotiq-settings.html"><span class="nav-icon">⚙️</span> Настройки</a>
   </div>
   <div class="sidebar-bottom">
-    <div class="plan-widget">
-      <div class="plan-name">🆓 Безплатен план</div>
-      <div class="plan-usage">1 от 1 анализа използван</div>
-      <div class="usage-bar"><div class="usage-fill" style="width:100%"></div></div>
-      <a href="#" class="upgrade-btn">Надгради към Стандарт →</a>
+    <div class="plan-widget" id="planWidget">
+      <div class="plan-name" id="planName">⏳ Зарежда...</div>
+      <div class="plan-usage" id="planUsage"></div>
+      <div class="usage-bar"><div class="usage-fill" id="usageFill" style="width:0%"></div></div>
+      <a href="imotiq-settings.html" class="upgrade-btn" id="upgradeBtn" style="display:none">Надгради →</a>
     </div>
     <div class="user-row">
-      <div class="avatar">ИИ</div>
-      <div><div class="user-name">Иван Иванов</div><div class="user-plan">Безплатен план</div></div>
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div><div class="user-name" id="sidebarName">...</div><div class="user-plan" id="sidebarPlan">...</div></div>
       <button class="logout-btn" onclick="logout()">⏻</button>
     </div>
   </div>
@@ -373,9 +373,9 @@
 
     <!-- TABS -->
     <div class="tabs">
-      <button class="tab active" onclick="setTab(this,'all')">Всички (3)</button>
-      <button class="tab" onclick="setTab(this,'new')">Нови съвпадения (7)</button>
-      <button class="tab" onclick="setTab(this,'paused')">Паузирани (0)</button>
+      <button class="tab active" onclick="setTab(this,'all')" id="tabAll">Всички (0)</button>
+      <button class="tab" onclick="setTab(this,'new')" id="tabNew">Нови съвпадения (0)</button>
+      <button class="tab" onclick="setTab(this,'paused')" id="tabPaused">Паузирани (0)</button>
     </div>
 
     <!-- ALERTS LIST -->
@@ -526,9 +526,57 @@
 <script>
   document.getElementById('currentDate').textContent = new Date().toLocaleDateString('bg-BG',{weekday:'long',day:'numeric',month:'long'});
 
+  // Зареди реални данни за потребителя в sidebar
+  function loadUserSidebar() {
+    var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
+    if (!u) return;
+
+    var planNames = {free:'Безплатен план', standard:'Стандарт', pro:'Про план', broker:'Брокер план'};
+    var planIcons = {free:'🆓', standard:'⭐', pro:'🚀', broker:'🏢'};
+    var planLimits = {free:1, standard:10, pro:50, broker:200};
+    var plan = u.plan || 'free';
+    var used = u.analysesThisMonth || 0;
+    var max = planLimits[plan] || 1;
+    var pct = Math.min(Math.round(used/max*100), 100);
+
+    // Avatar
+    var avatarEl = document.getElementById('sidebarAvatar');
+    if (u.avatar) {
+      avatarEl.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+    } else {
+      avatarEl.textContent = (u.name || '?').charAt(0).toUpperCase();
+    }
+
+    // Потребител
+    document.getElementById('sidebarName').textContent = u.name || u.email;
+    document.getElementById('sidebarPlan').textContent = planNames[plan] || plan;
+
+    // Plan widget
+    document.getElementById('planName').textContent = planIcons[plan] + ' ' + (planNames[plan] || plan);
+    document.getElementById('planUsage').textContent = used + ' от ' + max + ' анализа използвани';
+    document.getElementById('usageFill').style.width = pct + '%';
+
+    if (plan === 'free' || plan === 'standard') {
+      document.getElementById('upgradeBtn').style.display = 'block';
+    }
+  }
+
   function setTab(btn, tab) {
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
+  }
+
+  // Обнови таб броячите
+  function updateTabCounts(alerts) {
+    var all = alerts.length;
+    var newMatches = alerts.filter(function(a){ return (a.matchesTotal||0) > 0; }).length;
+    var paused = alerts.filter(function(a){ return !a.active; }).length;
+    var tabAll = document.getElementById('tabAll');
+    var tabNew = document.getElementById('tabNew');
+    var tabPaused = document.getElementById('tabPaused');
+    if(tabAll) tabAll.textContent = 'Всички (' + all + ')';
+    if(tabNew) tabNew.textContent = 'Нови съвпадения (' + newMatches + ')';
+    if(tabPaused) tabPaused.textContent = 'Паузирани (' + paused + ')';
   }
 
   function addAlert() {
@@ -628,6 +676,7 @@
 
     // Обнови статистики
     updateStats(result.alerts);
+    updateTabCounts(result.alerts);
   }
 
   function getDistrictEmoji(district) {
@@ -732,7 +781,7 @@
   }
 
   // Зареди при старт
-  window.addEventListener('load', loadAlerts);
+  window.addEventListener('load', function() { loadUserSidebar(); loadAlerts(); });
 
   // CURSOR
   const cursor=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
