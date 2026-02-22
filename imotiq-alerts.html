@@ -711,6 +711,7 @@
 
   // Обнови статистиките
   function updateStats(alerts) {
+    // Взимаме реалния план от localStorage (записан при логин)
     var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
     var plan = u ? (u.plan || 'free') : 'free';
     var planNames = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
@@ -903,6 +904,7 @@
 
   // Обнови статистиките
   function updateStats(alerts) {
+    // Взимаме реалния план от localStorage (записан при логин)
     var u = JSON.parse(localStorage.getItem('imotiq_user') || 'null');
     var plan = u ? (u.plan || 'free') : 'free';
     var planNames = {free:'Безплатен', standard:'Стандарт', pro:'Про', broker:'Брокер'};
