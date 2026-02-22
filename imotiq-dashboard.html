@@ -808,11 +808,11 @@
     <div class="result-card" id="resultCard" style="display:none">
       <div class="result-header">
         <div>
-          <div class="result-property">🏠 Лозенец, 3-стаен апартамент</div>
-          <div class="result-meta">95 м² · Imot.bg · Анализиран преди малко</div>
+          <div class="result-property" id="resProperty">🏠</div>
+          <div class="result-meta" id="resMeta"></div>
         </div>
         <div class="result-score">
-          <div class="score-num">4.2</div>
+          <div class="score-num" id="resScore">—</div>
           <div class="score-sub">Оценка /10</div>
         </div>
       </div>
@@ -820,52 +820,27 @@
       <div class="result-body">
         <div class="result-cell">
           <div class="cell-label">Обявена цена</div>
-          <div class="cell-value">285,000 лв</div>
-          <div class="cell-sub">≈ 3,000 лв/м²</div>
+          <div class="cell-value" id="resListedPrice">—</div>
+          <div class="cell-sub" id="resListedPricePerSqm"></div>
         </div>
         <div class="result-cell">
           <div class="cell-label">Справедлива цена</div>
-          <div class="cell-value green">238,000 лв</div>
-          <div class="cell-sub">≈ 2,505 лв/м²</div>
+          <div class="cell-value green" id="resFairPrice">—</div>
+          <div class="cell-sub" id="resFairPricePerSqm"></div>
         </div>
         <div class="result-cell">
-          <div class="cell-label">Надценена с</div>
-          <div class="cell-value red">+19.7%</div>
-          <div class="cell-sub">Препоръчваме преговори</div>
+          <div class="cell-label" id="resOverpriceLabel">Разлика</div>
+          <div class="cell-value" id="resOverprice">—</div>
+          <div class="cell-sub" id="resOverpriceSub"></div>
         </div>
       </div>
 
-      <div class="result-insights">
-        <div class="insight-row warn">
-          <span class="insight-icon">⚠️</span>
-          <div class="insight-text"><strong>Надценена с 19% спрямо средното за квартала.</strong> За Лозенец средната цена е 2,505 лв/м², тази обява иска 3,000 лв/м².</div>
-        </div>
-        <div class="insight-row warn">
-          <span class="insight-icon">🕐</span>
-          <div class="insight-text"><strong>Обявата е активна 6 месеца.</strong> Продавачът вероятно е мотивиран — добро място за преговори за 10-15% намаление.</div>
-        </div>
-        <div class="insight-row ok">
-          <span class="insight-icon">✅</span>
-          <div class="insight-text"><strong>Снимките са оригинални.</strong> Не открихме копирани изображения от други обяви или стокови снимки.</div>
-        </div>
-        <div class="insight-row ok">
-          <span class="insight-icon">✅</span>
-          <div class="insight-text"><strong>Телефонът е свързан само с тази обява.</strong> Без индикатори за измама или множество съмнителни обяви.</div>
-        </div>
-        <div class="insight-row info">
-          <span class="insight-icon">📈</span>
-          <div class="insight-text"><strong>Кварталът расте с 4.2% на тримесечие.</strong> Лозенец е стабилен инвестиционен избор с добра ликвидност.</div>
-        </div>
-        <div class="insight-row neutral">
-          <span class="insight-icon">💡</span>
-          <div class="insight-text"><strong>Препоръка:</strong> Направи оферта от 240,000 лв. Имаш силна преговорна позиция заради продължителността на обявата.</div>
-        </div>
-      </div>
+      <div class="result-insights" id="resInsights"></div>
 
       <div class="result-footer">
         <div class="verdict">
           <div class="verdict-dot"></div>
-          Надценена — Преговаряй агресивно
+          <span id="resVerdict">—</span>
         </div>
         <div class="result-actions">
           <button class="action-btn">📥 Запази</button>
@@ -1038,16 +1013,67 @@
       return;
     }
 
-    // Попълни резултата с реални данни
-    const a = result.analysis;
-    const l = result.listing;
-    if (a) {
-      const scoreEl = document.getElementById('aiScore');
-      if (scoreEl) scoreEl.textContent = a.score ? a.score.toFixed(1) : '—';
-      const verdictEl = document.querySelector('.result-verdict');
-      if (verdictEl) verdictEl.textContent = a.verdict || '';
-      const recEl = document.querySelector('.result-recommendation');
-      if (recEl) recEl.textContent = a.recommendation || '';
+    // Попълни резултата с РЕАЛНИ данни от Claude
+    var a = result.analysis;
+    var l = result.listing;
+
+    if (a && l) {
+      var pricePerSqm = l.size > 0 ? Math.round(l.price / l.size) : 0;
+      var fairPerSqm  = l.size > 0 ? Math.round((a.fairPrice || 0) / l.size) : 0;
+      var overpct = a.overpricePercent || 0;
+
+      // Хедър
+      document.getElementById('resProperty').textContent = '🏠 ' + (l.district || '') + ', ' + (l.propertyType || '');
+      document.getElementById('resMeta').textContent = (l.size || '—') + ' м² · ' + (l.source || 'imot.bg') + ' · Анализиран преди малко';
+      document.getElementById('resScore').textContent = a.score ? parseFloat(a.score).toFixed(1) : '—';
+
+      // Цени
+      document.getElementById('resListedPrice').textContent = l.price ? Number(l.price).toLocaleString('bg') + ' лв' : '—';
+      document.getElementById('resListedPricePerSqm').textContent = pricePerSqm ? '≈ ' + pricePerSqm.toLocaleString('bg') + ' лв/м²' : '';
+      document.getElementById('resFairPrice').textContent = a.fairPrice ? Number(a.fairPrice).toLocaleString('bg') + ' лв' : '—';
+      document.getElementById('resFairPricePerSqm').textContent = fairPerSqm ? '≈ ' + fairPerSqm.toLocaleString('bg') + ' лв/м²' : '';
+
+      // Надценяване
+      var overEl = document.getElementById('resOverprice');
+      overEl.textContent = (overpct > 0 ? '+' : '') + overpct + '%';
+      overEl.className = 'cell-value ' + (overpct > 5 ? 'red' : overpct < -5 ? 'green' : '');
+      document.getElementById('resOverpriceLabel').textContent = overpct > 0 ? 'Надценена с' : overpct < 0 ? 'Подценена с' : 'Справедлива';
+      document.getElementById('resOverpriceSub').textContent = a.negotiationRoom ? 'Преговори до ' + a.negotiationRoom + '%' : '';
+
+      // Insights от Claude
+      var iconMap = { warn: '⚠️', ok: '✅', info: '📈', neutral: '💡' };
+      var insights = a.insights || [];
+
+      // Добави телефон инфо
+      if (a.phone_note) {
+        insights.push({ type: a.phone_status === 'suspicious' ? 'warn' : 'info', text: a.phone_note });
+      }
+      // Добави снимки инфо
+      if (a.images_note) {
+        insights.push({ type: 'info', text: a.images_note });
+      }
+      // Добави fraud инфо
+      if (a.fraud_notes) {
+        insights.push({ type: a.fraud_risk === 'high' ? 'warn' : 'info', text: a.fraud_notes });
+      }
+      // Добави препоръка
+      if (a.recommendation) {
+        insights.push({ type: 'neutral', text: '💡 Препоръка: ' + a.recommendation });
+      }
+
+      document.getElementById('resInsights').innerHTML = insights.map(function(ins) {
+        var icon = iconMap[ins.type] || '💡';
+        return '<div class="insight-row ' + ins.type + '">' +
+          '<span class="insight-icon">' + icon + '</span>' +
+          '<div class="insight-text">' + ins.text + '</div>' +
+          '</div>';
+      }).join('');
+
+      // Verdict
+      document.getElementById('resVerdict').textContent = a.verdict || '';
+
+      // Обнови историята
+      loadHistory();
     }
 
     document.getElementById('resultCard').style.display = 'block';
